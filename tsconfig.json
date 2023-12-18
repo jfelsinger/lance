@@ -1,0 +1,35 @@
+{
+    "include": [
+        "src/**/*"
+    ],
+    "ts-node": {
+        "files": true
+    },
+    "compilerOptions": {
+        "types": [
+            "bun-types"
+        ],
+        "lib": [
+            "ESNext"
+        ],
+        "module": "ESNext",
+        "target": "ESNext",
+        "moduleResolution": "Bundler",
+        "noEmit": true,
+        "allowImportingTsExtensions": true,
+        "moduleDetection": "force",
+        "strict": true,
+        "allowJs": true,
+        "checkJs": true,
+        "outDir": "./bin",
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "composite": true,
+        "downlevelIteration": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "forceConsistentCasingInFileNames": true
+    }
+}
