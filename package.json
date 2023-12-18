@@ -6,7 +6,6 @@
   "browser": "dist/client/lance-gg.js",
   "types": "dist/lance-gg.d.ts",
   "scripts": {
-    "docs": "jsdoc -c jsdoc.conf.json",
     "build": "rollup --config rollup.config.js",
     "test-all": "mocha test/EndToEnd/",
     "test-serializer": "mocha ./test/serializer/",
@@ -34,7 +33,6 @@
     "bufferutil": "^4.0.1",
     "cannon": "^0.6.2",
     "event-emitter": "^0.3.5",
-    "jsdoc": "^3.6.3",
     "mkdirp": "^0.5.1",
     "p2": "^0.7.1",
     "socket.io": "^2.1.1",
@@ -75,7 +73,6 @@
     "eslint": "^8.28.0",
     "eslint-config-google": "^0.6.0",
     "express": "^4.14.0",
-    "lance-docs-template": "github:lance-gg/lance-docs-template#semver:^1.0.1",
     "mocha": "^10.1.0",
     "query-string": "^4.3.1",
     "rollup": "^2.38.5",
