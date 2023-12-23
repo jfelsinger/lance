@@ -1,7 +1,14 @@
 import GameWorld from './GameWorld';
-import EventEmitter from 'event-emitter';
+import EventEmitter from 'eventemitter3';
 import Timer from './game/Timer';
 import Trace from './lib/Trace';
+
+// place the game engine in the LANCE globals
+const isServerSide = (typeof window === 'undefined');
+const glob = isServerSide ? global : window;
+// set options
+const defaultOpts: Record<any> = { traceLevel: Trace.TRACE_NONE };
+if (!isServerSide) defaultOpts.clientIDSpace = 1000000;
 
 /**
  * The GameEngine contains the game logic.  Extend this class
@@ -394,17 +401,17 @@ class GameEngine {
  * @param {Object} sync - the synchronization object
  */
 
- /**
-  * Marks the beginning of a game step on the client
-  *
-  * @event GameEngine#client__preStep
-  */
+/**
+ * Marks the beginning of a game step on the client
+ *
+ * @event GameEngine#client__preStep
+ */
 
- /**
-  * Marks the end of a game step on the client
-  *
-  * @event GameEngine#client__postStep
-  */
+/**
+ * Marks the end of a game step on the client
+ *
+ * @event GameEngine#client__postStep
+ */
 
 /**
  * An input needs to be handled.  Emitted just before the GameEngine
@@ -433,14 +440,14 @@ class GameEngine {
  * @param {Number} playerId - the player ID
  */
 
- /**
-  * Client moved from one room to another
-  *
-  * @event GameEngine#server__roomUpdate
-  * @param {Number} playerId - the player ID
-  * @param {String} from - the room from which the client came
-  * @param {String} to - the room to which the client went
-  */
+/**
+ * Client moved from one room to another
+ *
+ * @event GameEngine#server__roomUpdate
+ * @param {Number} playerId - the player ID
+ * @param {String} from - the room from which the client came
+ * @param {String} to - the room to which the client went
+ */
 
 /**
  * An input needs to be handled.
@@ -465,23 +472,23 @@ class GameEngine {
  * @param {Number} maxStepCount - highest step in the sync
  */
 
- /**
-  * Client moved from one room to another
-  *
-  * @event GameEngine#client__roomUpdate
-  * @param {Number} playerId - the player ID
-  * @param {String} from - the room from which the client came
-  * @param {String} to - the room to which the client went
-  */
+/**
+ * Client moved from one room to another
+ *
+ * @event GameEngine#client__roomUpdate
+ * @param {Number} playerId - the player ID
+ * @param {String} from - the room from which the client came
+ * @param {String} to - the room to which the client went
+ */
 
- /**
-  * Client reset the world step
-  *
-  * @event GameEngine#client__stepReset
-  * @param {Object} resetDesc - sync from the server
-  * @param {Number} oldStep - the old step count
-  * @param {Number} newStep - the new step count
-  */
+/**
+ * Client reset the world step
+ *
+ * @event GameEngine#client__stepReset
+ * @param {Object} resetDesc - sync from the server
+ * @param {Number} oldStep - the old step count
+ * @param {Number} newStep - the new step count
+ */
 
 /**
  * Marks the beginning of a game step on the server
@@ -506,19 +513,19 @@ class GameEngine {
  * @param {String} input.playerId - player that sent the input
  */
 
- /**
-  * Report slow frame rate on the browser.
-  * The browser did not achieve a reasonable frame rate
-  *
-  * @event GameEngine#client__slowFrameRate
-  */
+/**
+ * Report slow frame rate on the browser.
+ * The browser did not achieve a reasonable frame rate
+ *
+ * @event GameEngine#client__slowFrameRate
+ */
 
-  /**
-   * server has started
-   *
-   * @event GameEngine#start
-   * @param {Number} timestamp - UTC epoch of start time
-   */
+/**
+ * server has started
+ *
+ * @event GameEngine#start
+ * @param {Number} timestamp - UTC epoch of start time
+ */
 
 // TODO: the declaration "export default" could be done as part of the class
 // declaration up above, but the current version of jsdoc doesn't support this.
