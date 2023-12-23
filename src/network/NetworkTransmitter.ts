@@ -49,7 +49,7 @@ export default class NetworkTransmitter {
 
         let classHash = Utils.hashStr(eventName);
 
-        let networkedEventPrototype = function() {};
+        let networkedEventPrototype = function() { };
         networkedEventPrototype.prototype.classId = classHash;
         networkedEventPrototype.prototype.eventName = eventName;
         networkedEventPrototype.netScheme = options.netScheme;

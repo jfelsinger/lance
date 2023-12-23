@@ -1,11 +1,11 @@
-import EventEmitter from 'event-emitter';
+import EventEmitter from 'eventemitter3';
 import http from 'http';
 
 /**
  * Measures network performance between the client and the server
  * Represents both the client and server portions of NetworkMonitor
  */
-export default class NetworkMonitor {
+export default class NetworkMonitor extends EventEmitter {
 
     constructor(server) {
 
@@ -14,13 +14,6 @@ export default class NetworkMonitor {
             this.server = server;
             this.gameName = Object.getPrototypeOf(server.gameEngine).constructor.name;
         }
-
-        // mixin for EventEmitter
-        let eventEmitter = new EventEmitter();
-        this.on = eventEmitter.on;
-        this.once = eventEmitter.once;
-        this.removeListener = eventEmitter.removeListener;
-        this.emit = eventEmitter.emit;
     }
 
     // client
@@ -61,7 +54,7 @@ export default class NetworkMonitor {
     registerPlayerOnServer(socket) {
         socket.on('RTTQuery', this.respondToRTTQuery.bind(this, socket));
         if (this.server && this.server.options.countConnections) {
-            http.get(`http://ping.games-eu.lance.gg:2000/${this.gameName}`).on('error', () => {});
+            http.get(`http://ping.games-eu.lance.gg:2000/${this.gameName}`).on('error', () => { });
         }
     }
 

@@ -1,4 +1,4 @@
-import Trace from './Trace.js';
+import Trace from './Trace';
 
 export default {
     Trace

@@ -5,7 +5,7 @@ import Trace from './lib/Trace';
 
 // place the game engine in the LANCE globals
 const isServerSide = (typeof window === 'undefined');
-const glob = isServerSide ? global : window;
+const glob: any = isServerSide ? global : window;
 // set options
 const defaultOpts: Record<any> = { traceLevel: Trace.TRACE_NONE };
 if (!isServerSide) defaultOpts.clientIDSpace = 1000000;
@@ -29,7 +29,7 @@ if (!isServerSide) defaultOpts.clientIDSpace = 1000000;
  * and therefore clients must resolve server updates which conflict
  * with client-side predictions.
  */
-class GameEngine {
+class GameEngine extends EventEmitter {
 
     /**
       * Create a game engine instance.  This needs to happen
@@ -38,16 +38,12 @@ class GameEngine {
       * @param {Object} options - options object
       * @param {Number} options.traceLevel - the trace level.
       */
-    constructor(options) {
+    constructor(public options: any = {}) {
+        super();
 
-        // place the game engine in the LANCE globals
-        const isServerSide = (typeof window === 'undefined');
-        const glob = isServerSide ? global : window;
         glob.LANCE = { gameEngine: this };
 
         // set options
-        const defaultOpts = { traceLevel: Trace.TRACE_NONE };
-        if (!isServerSide) defaultOpts.clientIDSpace = 1000000;
         this.options = Object.assign(defaultOpts, options);
 
         /**
@@ -56,46 +52,6 @@ class GameEngine {
          */
         this.playerId = NaN;
 
-        // set up event emitting and interface
-        let eventEmitter = this.options.eventEmitter;
-        if (typeof eventEmitter === 'undefined')
-            eventEmitter = new EventEmitter();
-
-        /**
-         * Register a handler for an event
-         *
-         * @method on
-         * @memberof GameEngine
-         * @instance
-         * @param {String} eventName - name of the event
-         * @param {Function} eventHandler - handler function
-         */
-        this.on = eventEmitter.on;
-
-        /**
-         * Register a handler for an event, called just once (if at all)
-         *
-         * @method once
-         * @memberof GameEngine
-         * @instance
-         * @param {String} eventName - name of the event
-         * @param {Function} eventHandler - handler function
-         */
-        this.once = eventEmitter.once;
-
-        /**
-         * Remove a handler
-         *
-         * @method removeListener
-         * @memberof GameEngine
-         * @instance
-         * @param {String} eventName - name of the event
-         * @param {Function} eventHandler - handler function
-         */
-        this.removeListener = eventEmitter.off;
-        this.off = eventEmitter.off;
-
-        this.emit = eventEmitter.emit;
 
         // set up trace
         this.trace = new Trace({ traceLevel: this.options.traceLevel });
@@ -160,7 +116,7 @@ class GameEngine {
       * @param {Number} dt - elapsed time since last step was called.  (optional)
       * @param {Boolean} physicsOnly - do a physics step only, no game logic
       */
-    step(isReenact, t, dt, physicsOnly) {
+    step(isReenact: boolean, t: number, dt: number, physicsOnly: boolean) {
         // physics-only step
         if (physicsOnly) {
             if (dt) dt /= 1000; // physics engines work in seconds
