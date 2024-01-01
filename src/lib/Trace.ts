@@ -1,3 +1,12 @@
+enum TRACE_LEVEL {
+    TRACE_ALL = 0,
+    TRACE_DEBUG = 1,
+    TRACE_INFO = 2,
+    TRACE_WARN = 3,
+    TRACE_ERROR = 4,
+    TRACE_NONE = 1000,
+}
+
 /**
  * Tracing Services.
  * Use the trace functions to trace game state.  Turn on tracing by
@@ -6,14 +15,19 @@
  * warn, and error traces to be recorded.
  */
 class Trace {
+    traceBuffer: any[] = [];
+    step: string;
 
-    constructor(options) {
+    error: any;
+    warn: any;
+    info: any;
+    debug: any;
 
+    constructor(public options: { traceLevel: TRACE_LEVEL } = { traceLevel: TRACE_LEVEL.TRACE_DEBUG }) {
         this.options = Object.assign({
-            traceLevel: this.TRACE_DEBUG
+            traceLevel: Trace.TRACE_DEBUG
         }, options);
 
-        this.traceBuffer = [];
         this.step = 'initializing';
 
         // syntactic sugar functions
@@ -29,46 +43,46 @@ class Trace {
      * @memberof Trace
      * @member {Number} TRACE_ALL
      */
-    static get TRACE_ALL() { return 0; }
+    static get TRACE_ALL() { return TRACE_LEVEL.TRACE_ALL; }
 
-     /**
-      * Include debug traces and higher.
-      * @memberof Trace
-      * @member {Number} TRACE_DEBUG
-      */
-    static get TRACE_DEBUG() { return 1; }
+    /**
+     * Include debug traces and higher.
+     * @memberof Trace
+     * @member {Number} TRACE_DEBUG
+     */
+    static get TRACE_DEBUG() { return TRACE_LEVEL.TRACE_DEBUG; }
 
-     /**
-      * Include info traces and higher.
-      * @memberof Trace
-      * @member {Number} TRACE_INFO
-      */
-    static get TRACE_INFO() { return 2; }
+    /**
+     * Include info traces and higher.
+     * @memberof Trace
+     * @member {Number} TRACE_INFO
+     */
+    static get TRACE_INFO() { return TRACE_LEVEL.TRACE_INFO; }
 
-     /**
-      * Include warn traces and higher.
-      * @memberof Trace
-      * @member {Number} TRACE_WARN
-      */
-    static get TRACE_WARN() { return 3; }
+    /**
+     * Include warn traces and higher.
+     * @memberof Trace
+     * @member {Number} TRACE_WARN
+     */
+    static get TRACE_WARN() { return TRACE_LEVEL.TRACE_WARN; }
 
-     /**
-      * Include error traces and higher.
-      * @memberof Trace
-      * @member {Number} TRACE_ERROR
-      */
-    static get TRACE_ERROR() { return 4; }
+    /**
+     * Include error traces and higher.
+     * @memberof Trace
+     * @member {Number} TRACE_ERROR
+     */
+    static get TRACE_ERROR() { return TRACE_LEVEL.TRACE_ERROR; }
 
-     /**
-      * Disable all tracing.
-      * @memberof Trace
-      * @member {Number} TRACE_NONE
-      */
-    static get TRACE_NONE() { return 1000; }
+    /**
+     * Disable all tracing.
+     * @memberof Trace
+     * @member {Number} TRACE_NONE
+     */
+    static get TRACE_NONE() { return TRACE_LEVEL.TRACE_NONE; }
 
-    trace(level, dataCB) {
+    trace(level: TRACE_LEVEL, dataCB: any) {
 
-         // all traces must be functions which return strings
+        // all traces must be functions which return strings
         if (typeof dataCB !== 'function') {
             throw new Error(`Lance trace was called but instead of passing a function, it received a [${typeof dataCB}]`);
         }
@@ -89,7 +103,7 @@ class Trace {
         return this.traceBuffer.length;
     }
 
-    setStep(s) {
+    setStep(s: string) {
         this.step = s;
     }
 }

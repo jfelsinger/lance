@@ -1,6 +1,6 @@
 export default class Utils {
 
-    static hashStr(str, bits) {
+    static hashStr(str: string, bits: number) {
         let hash = 5381;
         let i = str.length;
         bits = bits ? bits : 8;
@@ -17,7 +17,7 @@ export default class Utils {
         return hash;
     }
 
-    static arrayBuffersEqual(buf1, buf2) {
+    static arrayBuffersEqual(buf1: Uint8Array, buf2: Uint8Array) {
         if (buf1.byteLength !== buf2.byteLength) return false;
         let dv1 = new Int8Array(buf1);
         let dv2 = new Int8Array(buf2);
@@ -27,16 +27,7 @@ export default class Utils {
         return true;
     }
 
-    static httpGetPromise(url) {
-        return new Promise((resolve, reject) => {
-            let req = new XMLHttpRequest();
-            req.open('GET', url, true);
-            req.onload = () => {
-                if (req.status >= 200 && req.status < 400) resolve(JSON.parse(req.responseText));
-                else reject();
-            };
-            req.onerror = () => {};
-            req.send();
-        });
+    static async httpGetPromise(url: string) {
+        return await fetch(url).then(res => res.json())
     }
 }

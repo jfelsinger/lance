@@ -4,11 +4,20 @@ const SIXTY_PER_SEC = 1000 / 60;
 const LOOP_SLOW_THRESH = 0.3;
 const LOOP_SLOW_COUNT = 10;
 
+type SchedulerOptions = {
+    period: number,
+    delay: number,
+};
+
 /**
  * Scheduler class
  *
  */
 export default class Scheduler extends EventEmitter {
+    options: Required<SchedulerOptions>;
+    nextExecTime: number = 0;
+    requestedDelay: number = 0;
+    delayCounter: number = 0;
 
     /**
      * schedule a function to be called
@@ -18,15 +27,13 @@ export default class Scheduler extends EventEmitter {
      * @param {Number} options.period number of milliseconds between each invocation, not including the function's execution time
      * @param {Number} options.delay number of milliseconds to add when delaying or hurrying the execution
      */
-    constructor(options) {
+    constructor(options?: SchedulerOptions) {
+        super();
         this.options = Object.assign({
             tick: null,
             period: SIXTY_PER_SEC,
             delay: SIXTY_PER_SEC / 3
         }, options);
-        this.nextExecTime = null;
-        this.requestedDelay = 0;
-        this.delayCounter = 0;
     }
 
     // in same cases, setTimeout is ignored by the browser,

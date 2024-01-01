@@ -164,7 +164,7 @@ const keyCodeTable = {
     243: 'half-width/full-width',
     244: 'kanji',
     255: 'toggle touchpad'
-};
+} as const;
 
 /**
  * This class allows easy usage of device keyboard controls.  Use the method {@link KeyboardControls#bindKey} to
@@ -219,8 +219,8 @@ class KeyboardControls {
     }
 
     setupListeners() {
-        document.addEventListener('keydown', (e) => { this.onKeyChange(e, true);});
-        document.addEventListener('keyup', (e) => { this.onKeyChange(e, false);});
+        document.addEventListener('keydown', (e) => { this.onKeyChange(e, true); });
+        document.addEventListener('keyup', (e) => { this.onKeyChange(e, false); });
     }
 
     /**
