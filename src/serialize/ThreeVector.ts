@@ -5,7 +5,7 @@ import BaseTypes from './BaseTypes';
  * A ThreeVector is a geometric object which is completely described
  * by three values.
  */
-class ThreeVector extends Serializable {
+export class ThreeVector extends Serializable {
 
     static get netScheme() {
         return {
@@ -15,27 +15,15 @@ class ThreeVector extends Serializable {
         };
     }
 
-    /**
-    * Creates an instance of a ThreeVector.
-    * @param {Number} x - first value
-    * @param {Number} y - second value
-    * @param {Number} z - second value
-    * @return {ThreeVector} v - the new ThreeVector
-    */
-    constructor(x, y, z) {
+    constructor(public x: number, public y: number, public z: number) {
         super();
-        this.x = x;
-        this.y = y;
-        this.z = z;
-
-        return this;
     }
 
     /**
      * Formatted textual description of the ThreeVector.
      * @return {String} description
      */
-    toString() {
+    toString(): string {
         function round3(x) { return Math.round(x * 1000) / 1000; }
         return `[${round3(this.x)}, ${round3(this.y)}, ${round3(this.z)}]`;
     }
@@ -46,7 +34,7 @@ class ThreeVector extends Serializable {
      * @param {Number} s the scale
      * @return {ThreeVector} returns self
      */
-    multiplyScalar(s) {
+    multiplyScalar(s: number): this {
         this.x *= s;
         this.y *= s;
         this.z *= s;
@@ -58,7 +46,7 @@ class ThreeVector extends Serializable {
      *
      * @return {Number} length of this vector
      */
-    length() {
+    length(): number {
         return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
     }
 
@@ -68,7 +56,7 @@ class ThreeVector extends Serializable {
      * @param {ThreeVector} other the other vector
      * @return {ThreeVector} returns self
      */
-    add(other) {
+    add(other: ThreeVector): this {
         this.x += other.x;
         this.y += other.y;
         this.z += other.z;
@@ -81,7 +69,7 @@ class ThreeVector extends Serializable {
      * @param {ThreeVector} other the other vector
      * @return {ThreeVector} returns self
      */
-    subtract(other) {
+    subtract(other: ThreeVector): this {
         this.x -= other.x;
         this.y -= other.y;
         this.z -= other.z;
@@ -93,7 +81,7 @@ class ThreeVector extends Serializable {
      *
      * @return {ThreeVector} returns self
      */
-    normalize() {
+    normalize(): this {
         this.multiplyScalar(1 / this.length());
         return this;
     }
@@ -104,7 +92,7 @@ class ThreeVector extends Serializable {
      * @param {ThreeVector} sourceObj the other vector
      * @return {ThreeVector} returns self
      */
-    copy(sourceObj) {
+    copy(sourceObj: ThreeVector): this {
         this.x = sourceObj.x;
         this.y = sourceObj.y;
         this.z = sourceObj.z;
@@ -119,7 +107,7 @@ class ThreeVector extends Serializable {
      * @param {Number} z z-value
      * @return {ThreeVector} returns self
      */
-    set(x, y, z) {
+    set(x: number, y: number, z: number): this {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -131,7 +119,7 @@ class ThreeVector extends Serializable {
      *
      * @return {ThreeVector} returns clone
      */
-    clone() {
+    clone(): ThreeVector {
         return new ThreeVector(this.x, this.y, this.z);
     }
 
@@ -142,7 +130,7 @@ class ThreeVector extends Serializable {
      * @param {Number} p The percentage to interpolate
      * @return {ThreeVector} returns self
      */
-    lerp(target, p) {
+    lerp(target: ThreeVector, p: number): this {
         this.x += (target.x - this.x) * p;
         this.y += (target.y - this.y) * p;
         this.z += (target.z - this.z) * p;
@@ -160,14 +148,14 @@ class ThreeVector extends Serializable {
      * @param {Number} options.max No more than this value
      * @return {ThreeVector} returns new Incremental Vector
      */
-    getBendingDelta(target, options) {
+    getBendingDelta(target: ThreeVector, options: { increments: number, percent: number, min?: number, max?: number }): ThreeVector {
         let increment = target.clone();
         increment.subtract(this);
         increment.multiplyScalar(options.percent);
 
         // check for max case
         if ((options.max && increment.length() > options.max) ||
-            (options.max && increment.length() < options.min)) {
+            (options.min && increment.length() < options.min)) {
             return new ThreeVector(0, 0, 0);
         }
 

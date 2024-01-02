@@ -5,7 +5,7 @@ import BaseTypes from './BaseTypes';
  * A TwoVector is a geometric object which is completely described
  * by two values.
  */
-class TwoVector extends Serializable {
+export class TwoVector extends Serializable {
 
     static get netScheme() {
         return {
@@ -14,25 +14,15 @@ class TwoVector extends Serializable {
         };
     }
 
-    /**
-    * Creates an instance of a TwoVector.
-    * @param {Number} x - first value
-    * @param {Number} y - second value
-    * @return {TwoVector} v - the new TwoVector
-    */
-    constructor(x, y) {
+    constructor(public x: number, public y: number) {
         super();
-        this.x = x;
-        this.y = y;
-
-        return this;
     }
 
     /**
      * Formatted textual description of the TwoVector.
      * @return {String} description
      */
-    toString() {
+    toString(): string {
         function round3(x) { return Math.round(x * 1000) / 1000; }
         return `[${round3(this.x)}, ${round3(this.y)}]`;
     }
@@ -44,13 +34,13 @@ class TwoVector extends Serializable {
      * @param {Number} y y-value
      * @return {TwoVector} returns self
      */
-    set(x, y) {
+    set(x: number, y: number): this {
         this.x = x;
         this.y = y;
         return this;
     }
 
-    multiply(other) {
+    multiply(other: TwoVector): this {
         this.x *= other.x;
         this.y *= other.y;
 
@@ -63,7 +53,7 @@ class TwoVector extends Serializable {
      * @param {Number} s the scale
      * @return {TwoVector} returns self
      */
-    multiplyScalar(s) {
+    multiplyScalar(s: number): this {
         this.x *= s;
         this.y *= s;
 
@@ -76,7 +66,7 @@ class TwoVector extends Serializable {
      * @param {TwoVector} other the other vector
      * @return {TwoVector} returns self
      */
-    add(other) {
+    add(other: TwoVector): this {
         this.x += other.x;
         this.y += other.y;
 
@@ -89,7 +79,7 @@ class TwoVector extends Serializable {
      * @param {TwoVector} other the other vector
      * @return {TwoVector} returns self
      */
-    subtract(other) {
+    subtract(other: TwoVector): this {
         this.x -= other.x;
         this.y -= other.y;
 
@@ -101,7 +91,7 @@ class TwoVector extends Serializable {
      *
      * @return {Number} length of this vector
      */
-    length() {
+    length(): number {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
 
@@ -110,7 +100,7 @@ class TwoVector extends Serializable {
      *
      * @return {TwoVector} returns self
      */
-    normalize() {
+    normalize(): this {
         this.multiplyScalar(1 / this.length());
         return this;
     }
@@ -121,7 +111,7 @@ class TwoVector extends Serializable {
      * @param {TwoVector} sourceObj the other vector
      * @return {TwoVector} returns self
      */
-    copy(sourceObj) {
+    copy(sourceObj: TwoVector): this {
         this.x = sourceObj.x;
         this.y = sourceObj.y;
 
@@ -133,7 +123,7 @@ class TwoVector extends Serializable {
      *
      * @return {TwoVector} returns clone
      */
-    clone() {
+    clone(): TwoVector {
         return new TwoVector(this.x, this.y);
     }
 
@@ -144,7 +134,7 @@ class TwoVector extends Serializable {
      * @param {Number} p The percentage to interpolate
      * @return {TwoVector} returns self
      */
-    lerp(target, p) {
+    lerp(target: TwoVector, p: number): this {
         this.x += (target.x - this.x) * p;
         this.y += (target.y - this.y) * p;
 
@@ -162,7 +152,7 @@ class TwoVector extends Serializable {
      * @param {Number} options.max No more than this value
      * @return {TwoVector} returns new Incremental Vector
      */
-    getBendingDelta(target, options) {
+    getBendingDelta(target: TwoVector, options: { increments: number, percent: number, min?: number, max?: number }): TwoVector {
         let increment = target.clone();
         increment.subtract(this);
         increment.multiplyScalar(options.percent);

@@ -1,14 +1,24 @@
 import GameWorld from './GameWorld';
 import EventEmitter from 'eventemitter3';
 import Timer from './game/Timer';
-import Trace from './lib/Trace';
+import { Trace, TRACE_LEVEL } from './lib/Trace';
 
 // place the game engine in the LANCE globals
 const isServerSide = (typeof window === 'undefined');
 const glob: any = isServerSide ? global : window;
 // set options
-const defaultOpts: Record<any> = { traceLevel: Trace.TRACE_NONE };
+const defaultOpts: Record<string, any> = { traceLevel: Trace.TRACE_NONE };
 if (!isServerSide) defaultOpts.clientIDSpace = 1000000;
+
+export type EngineOptions = {
+    traceLevel?: TRACE_LEVEL
+};
+
+export type InputDescriptor = {
+    input: string;
+    messageIndex: number;
+    step: number;
+}
 
 /**
  * The GameEngine contains the game logic.  Extend this class
@@ -29,7 +39,10 @@ if (!isServerSide) defaultOpts.clientIDSpace = 1000000;
  * and therefore clients must resolve server updates which conflict
  * with client-side predictions.
  */
-class GameEngine extends EventEmitter {
+export class GameEngine extends EventEmitter {
+    trace: Trace;
+    playerId: number;
+    world!: GameWorld;
 
     /**
       * Create a game engine instance.  This needs to happen
@@ -38,7 +51,7 @@ class GameEngine extends EventEmitter {
       * @param {Object} options - options object
       * @param {Number} options.traceLevel - the trace level.
       */
-    constructor(public options: any = {}) {
+    constructor(public options: EngineOptions = {}) {
         super();
 
         glob.LANCE = { gameEngine: this };
@@ -218,7 +231,7 @@ class GameEngine extends EventEmitter {
      * @param {Number} playerId - the player ID
      * @param {Boolean} isServer - indicate if this function is being called on the server side
      */
-    processInput(inputDesc, playerId, isServer) {
+    processInput(inputDesc: InputDescriptor, playerId: number, isServer: boolean) {
         this.trace.info(() => `game engine processing input[${inputDesc.messageIndex}] <${inputDesc.input}> from playerId ${playerId}`);
     }
 
@@ -227,7 +240,7 @@ class GameEngine extends EventEmitter {
      *
      * @param {Object|String} objectId - the object or object ID
      */
-    removeObjectFromWorld(objectId) {
+    removeObjectFromWorld(objectId: any) {
 
         if (typeof objectId === 'object') objectId = objectId.id;
         let object = this.world.objects[objectId];

@@ -1,5 +1,8 @@
 import Serializable from './Serializable';
 import BaseTypes from './BaseTypes';
+import { GameEngine } from '../GameEngine';
+import type { Bending } from '../types/Bend';
+import { GameComponent } from './GameComponent';
 
 /**
  * GameObject is the base class of all game objects.
@@ -8,7 +11,11 @@ import BaseTypes from './BaseTypes';
  * Game developers will use one of the subclasses such as DynamicObject,
  * or PhysicalObject.
  */
-class GameObject extends Serializable {
+export class GameObject extends Serializable {
+    id?: number;
+    playerId: number;
+    components: Record<string, GameComponent> = {};
+    savedCopy?: this;
 
     static get netScheme() {
         return {
@@ -25,7 +32,7 @@ class GameObject extends Serializable {
     * @param {Object} props - additional properties for creation
     * @param {Number} props.playerId - the playerId value of the player who owns this object
     */
-    constructor(gameEngine, options, props) {
+    constructor(public gameEngine: GameEngine, options?: { id: number }, props?: { playerId: number }) {
         super();
         /**
          * The gameEngine this object will be used in
@@ -46,7 +53,6 @@ class GameObject extends Serializable {
         * angular velocity, and orientation.  In this case the id will be set to null.
         * @member {Number}
         */
-        this.id = null;
         if (options && 'id' in options)
             this.id = options.id;
         else if (this.gameEngine)
@@ -57,8 +63,6 @@ class GameObject extends Serializable {
         * @member {Number}
         */
         this.playerId = (props && props.playerId) ? props.playerId : 0;
-
-        this.components = {};
     }
 
     /**
@@ -67,20 +71,20 @@ class GameObject extends Serializable {
      * and any other resources that should be created
      * @param {GameEngine} gameEngine the game engine
      */
-    onAddToWorld(gameEngine) {}
+    onAddToWorld(gameEngine: GameEngine) { }
 
     /**
      * Called after the object is removed from game-world.
      * This is where renderer sub-objects and any other resources should be freed
      * @param {GameEngine} gameEngine the game engine
      */
-    onRemoveFromWorld(gameEngine) {}
+    onRemoveFromWorld(gameEngine: GameEngine) { }
 
     /**
      * Formatted textual description of the game object.
      * @return {String} description - a string description
      */
-    toString() {
+    toString(): string {
         return `game-object[${this.id}]`;
     }
 
@@ -88,42 +92,42 @@ class GameObject extends Serializable {
      * Formatted textual description of the game object's current bending properties.
      * @return {String} description - a string description
      */
-    bendingToString() {
+    bendingToString(): string {
         return 'no bending';
     }
 
-    saveState(other) {
-        this.savedCopy = (new this.constructor(this.gameEngine, { id: null }));
-        this.savedCopy.syncTo(other ? other : this);
+    saveState<TThis extends this>(other: TThis) {
+        this.savedCopy = (new (this as any).constructor(this.gameEngine, { id: null }));
+        this.savedCopy?.syncTo(other ? other : this);
     }
-   /**
-    * Bending is defined as the amount of error correction that will be applied
-    * on the client side to a given object's physical attributes, incrementally,
-    * by the time the next server broadcast is expected to arrive.
-    *
-    * When this percentage is 0.0, the client always ignores the server object's value.
-    * When this percentage is 1.0, the server object's attributes will be applied in full.
-    *
-    * The GameObject bending attribute is implemented as a getter, and can provide
-    * distinct values for position, velocity, angle, and angularVelocity.
-    * And in each case, you can also provide overrides for local objects,
-    * these attributes will be called, respectively, positionLocal, velocityLocal,
-    * angleLocal, angularVelocityLocal.
-    *
-    * @example
-    * get bending() {
-    *   return {
-    *     position: { percent: 1.0, min: 0.0 },
-    *     velocity: { percent: 0.0, min: 0.0 },
-    *     angularVelocity: { percent: 0.0 },
-    *     angleLocal: { percent: 1.0 }
-    *   }
-    * };
-    *
-    * @memberof GameObject
-    * @member {Object} bending
-    */
-    get bending() {
+    /**
+     * Bending is defined as the amount of error correction that will be applied
+     * on the client side to a given object's physical attributes, incrementally,
+     * by the time the next server broadcast is expected to arrive.
+     *
+     * When this percentage is 0.0, the client always ignores the server object's value.
+     * When this percentage is 1.0, the server object's attributes will be applied in full.
+     *
+     * The GameObject bending attribute is implemented as a getter, and can provide
+     * distinct values for position, velocity, angle, and angularVelocity.
+     * And in each case, you can also provide overrides for local objects,
+     * these attributes will be called, respectively, positionLocal, velocityLocal,
+     * angleLocal, angularVelocityLocal.
+     *
+     * @example
+     * get bending() {
+     *   return {
+     *     position: { percent: 1.0, min: 0.0 },
+     *     velocity: { percent: 0.0, min: 0.0 },
+     *     angularVelocity: { percent: 0.0 },
+     *     angleLocal: { percent: 1.0 }
+     *   }
+     * };
+     *
+     * @memberof GameObject
+     * @member {Object} bending
+     */
+    get bending(): Bending {
         return {
             position: { percent: 1.0, min: 0.0 },
             velocity: { percent: 0.0, min: 0.0 },
@@ -135,14 +139,14 @@ class GameObject extends Serializable {
     // TODO:
     // rather than pass worldSettings on each bend, they could
     // be passed in on the constructor just once.
-    bendToCurrentState(bending, worldSettings, isLocal, bendingIncrements) {
+    bendToCurrentState(bending: any, worldSettings: any, isLocal: boolean, bendingIncrements: number) {
         if (this.savedCopy) {
             this.bendToCurrent(this.savedCopy, bending, worldSettings, isLocal, bendingIncrements);
         }
-        this.savedCopy = null;
+        this.savedCopy = undefined;
     }
 
-    bendToCurrent(original, bending, worldSettings, isLocal, bendingIncrements) {
+    bendToCurrent<TThis extends this>(original: TThis, bending: any, worldSettings: any, isLocal: boolean, bendingIncrements: number) {
     }
 
     /**
@@ -150,24 +154,24 @@ class GameObject extends Serializable {
      * This is used by the synchronizer to create temporary objects, and must be implemented by all sub-classes as well.
      * @param {GameObject} other the other object to synchronize to
      */
-    syncTo(other) {
+    syncTo<TThis extends this>(other: TThis) {
         super.syncTo(other);
         this.playerId = other.playerId;
     }
 
     // copy physical attributes to physics sub-object
-    refreshToPhysics() {}
+    refreshToPhysics() { }
 
     // copy physical attributes from physics sub-object
-    refreshFromPhysics() {}
+    refreshFromPhysics() { }
 
     // apply a single bending increment
-    applyIncrementalBending() { }
+    applyIncrementalBending(stepsDesc: any) { }
 
     // clean up resources
-    destroy() {}
+    destroy() { }
 
-    addComponent(componentInstance) {
+    addComponent(componentInstance: any) {
         componentInstance.parentObject = this;
         this.components[componentInstance.constructor.name] = componentInstance;
 
@@ -177,7 +181,7 @@ class GameObject extends Serializable {
         }
     }
 
-    removeComponent(componentName) {
+    removeComponent(componentName: string) {
         // todo cleanup of the component ?
         delete this.components[componentName];
 
@@ -192,11 +196,11 @@ class GameObject extends Serializable {
      * @param {Object} componentClass the comp
      * @return {Boolean} true if the gameObject contains this component
      */
-    hasComponent(componentClass) {
+    hasComponent(componentClass: any): boolean {
         return componentClass.name in this.components;
     }
 
-    getComponent(componentClass) {
+    getComponent(componentClass: any) {
         return this.components[componentClass.name];
     }
 

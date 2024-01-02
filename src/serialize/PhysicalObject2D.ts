@@ -2,11 +2,29 @@ import GameObject from './GameObject';
 import BaseTypes from './BaseTypes';
 import TwoVector from './TwoVector';
 import MathUtils from '../lib/MathUtils';
+import { GameEngine } from '../GameEngine';
+import type { Bending, IncrementalBend } from '../types/Bend';
 
 /**
  * The PhysicalObject2D is the base class for physical game objects in 2D Physics
  */
 class PhysicalObject2D extends GameObject {
+    class = PhysicalObject2D;
+    position: TwoVector;
+    velocity: TwoVector;
+    angle: number = 0;
+    angularVelocity: number = 0;
+    mass: number = 0;
+
+    bendingTarget?: this;
+    incrementScale: number = 1;
+    bendingIncrements: number = 0;
+    bendingPositionDelta?: TwoVector;
+    bendingVelocityDelta?: TwoVector;
+    bendingAVDelta: number = 0;
+    bendingAngleDelta: number = 0;
+    bendingOptions?: IncrementalBend;
+    physicsObj!: this;
 
     /**
     * The netScheme is a dictionary of attributes in this game
@@ -55,16 +73,13 @@ class PhysicalObject2D extends GameObject {
     * @param {Number} props.mass - the mass
     * @param {Number} props.angularVelocity - angular velocity
     */
-    constructor(gameEngine, options, props) {
+    constructor(gameEngine: GameEngine, options: any, props: any) {
         super(gameEngine, options, props);
         this.bendingIncrements = 0;
 
         // set default position, velocity and quaternion
         this.position = new TwoVector(0, 0);
         this.velocity = new TwoVector(0, 0);
-        this.angle = 0;
-        this.angularVelocity = 0;
-        this.mass = 0;
 
         // use values if provided
         props = props || {};
@@ -73,8 +88,6 @@ class PhysicalObject2D extends GameObject {
         if (props.angle) this.angle = props.angle;
         if (props.angularVelocity) this.angularVelocity = props.angularVelocity;
         if (props.mass) this.mass = props.mass;
-
-        this.class = PhysicalObject2D;
     }
 
     /**
@@ -82,7 +95,7 @@ class PhysicalObject2D extends GameObject {
      * This is the right place to add renderer sub-objects, physics sub-objects
      * and any other resources that should be created
      */
-    onAddToWorld() {}
+    onAddToWorld() { }
 
     /**
      * Formatted textual description of the dynamic object.
@@ -91,7 +104,7 @@ class PhysicalObject2D extends GameObject {
      *
      * @return {String} description - a string describing the PhysicalObject2D
      */
-    toString() {
+    toString(): string {
         let p = this.position.toString();
         let v = this.velocity.toString();
         let a = this.angle;
@@ -107,7 +120,7 @@ class PhysicalObject2D extends GameObject {
      *
      * @return {Object} bending - an object with bending paramters
      */
-    get bending() {
+    get bending(): Bending {
         return {
             // example:
             // position: { percent: 0.8, min: 0.0, max: 4.0 },
@@ -132,7 +145,7 @@ class PhysicalObject2D extends GameObject {
     // - bendingAngleDelta
     // these can later be used to "bend" incrementally from the state described
     // by "original" to the state described by "self"
-    bendToCurrent(original, percent, worldSettings, isLocal, increments) {
+    bendToCurrent<TThis extends this>(original: TThis, percent: number, worldSettings: any, isLocal: boolean, increments: number) {
 
         let bending = { increments, percent };
         // if the object has defined a bending multiples for this object, use them
@@ -160,8 +173,8 @@ class PhysicalObject2D extends GameObject {
         // get the incremental angle correction
         this.bendingAngleDelta = MathUtils.interpolateDeltaWithWrapping(original.angle, this.angle, angleBending.percent, 0, 2 * Math.PI) / increments;
 
-        this.bendingTarget = (new this.constructor());
-        this.bendingTarget.syncTo(this);
+        this.bendingTarget = (new (this as any).constructor());
+        this.bendingTarget?.syncTo(this);
 
         // revert to original
         this.position.copy(original.position);
@@ -175,7 +188,7 @@ class PhysicalObject2D extends GameObject {
         this.refreshToPhysics();
     }
 
-    syncTo(other, options) {
+    syncTo<TThis extends this>(other: TThis, options?: any) {
 
         super.syncTo(other);
 
@@ -202,7 +215,7 @@ class PhysicalObject2D extends GameObject {
     // physics engines have different implementations.
     // TODO: Better implementation: the physics engine implementor
     // should define copyFromLanceVector and copyToLanceVector
-    copyVector(source, target) {
+    copyVector(source: any, target: any) {
         let sourceVec = source;
         if (typeof source[0] === 'number' && typeof source[1] === 'number')
             sourceVec = { x: source[0], y: source[1] };
@@ -227,7 +240,7 @@ class PhysicalObject2D extends GameObject {
     }
 
     // apply one increment of bending
-    applyIncrementalBending(stepDesc) {
+    applyIncrementalBending(stepDesc: any) {
         if (this.bendingIncrements === 0)
             return;
 
@@ -235,8 +248,8 @@ class PhysicalObject2D extends GameObject {
         if (stepDesc && stepDesc.dt)
             timeFactor = stepDesc.dt / (1000 / 60);
 
-        const posDelta = this.bendingPositionDelta.clone().multiplyScalar(timeFactor);
-        const velDelta = this.bendingVelocityDelta.clone().multiplyScalar(timeFactor);
+        const posDelta = this.bendingPositionDelta?.clone().multiplyScalar(timeFactor);
+        const velDelta = this.bendingVelocityDelta?.clone().multiplyScalar(timeFactor);
         this.position.add(posDelta);
         this.velocity.add(velDelta);
         this.angularVelocity += (this.bendingAVDelta * timeFactor);

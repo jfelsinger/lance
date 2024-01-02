@@ -1,9 +1,22 @@
+export type ObjectQuery = {
+    id?: string | number;
+    playerId?: string | number;
+    instanceType?: string;
+    components?: string[];
+    returnSingle?: boolean;
+}
+
 /**
  * This class implements a singleton game world instance, created by Lance.
  * It represents an instance of the game world, and includes all the game objects.
  * It is the state of the game.
  */
-class GameWorld {
+export class GameWorld {
+    stepCount: number = 0;
+    playerCount: number = 0;
+    idCount: number = 0;
+    objects: Record<string, any> = {};
+
 
     /**
      * Constructor of the World instance.  Invoked by Lance on startup.
@@ -11,10 +24,6 @@ class GameWorld {
      * @hideconstructor
      */
     constructor() {
-        this.stepCount = 0;
-        this.objects = {};
-        this.playerCount = 0;
-        this.idCount = 0;
     }
 
     /**
@@ -22,7 +31,7 @@ class GameWorld {
      * @private
      * @return {Number} the new id
      */
-    getNewId() {
+    getNewId(): number {
         let possibleId = this.idCount;
         // find a free id
         while (possibleId in this.objects)
@@ -42,8 +51,8 @@ class GameWorld {
      * @param {Boolean} [query.returnSingle] Return the first object matched
      * @return {Array | Object} All game objects which match all the query parameters, or the first match if returnSingle was specified
      */
-    queryObjects(query) {
-        let queriedObjects = [];
+    queryObjects(query: ObjectQuery) {
+        let queriedObjects: any[] = [];
 
         // todo this is currently a somewhat inefficient implementation for API testing purposes.
         // It should be implemented with cached dictionaries like in nano-ecs
@@ -87,7 +96,7 @@ class GameWorld {
      * @param {Object} query See queryObjects
      * @return {Object} The game object, if found
      */
-    queryObject(query) {
+    queryObject(query: ObjectQuery) {
         return this.queryObjects(Object.assign(query, {
             returnSingle: true
         }));

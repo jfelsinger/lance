@@ -5,6 +5,7 @@ import Quaternion from './Quaternion';
 import BaseTypes from './BaseTypes';
 
 const MAX_UINT_16 = 0xFFFF;
+import { Serializable } from './Serializable';
 
 /**
  * The Serializer is responsible for serializing the game world and its
@@ -12,11 +13,11 @@ const MAX_UINT_16 = 0xFFFF;
  * Serializer deserializes these objects.
  *
  */
-class Serializer {
+export class Serializer {
+    registeredClasses: Record<string, Serializable> = {};
+    customTypes: Record<string, any> = {};
 
     constructor() {
-        this.registeredClasses = {};
-        this.customTypes = {};
         this.registerClass(TwoVector);
         this.registerClass(ThreeVector);
         this.registerClass(Quaternion);
@@ -29,7 +30,7 @@ class Serializer {
      */
     // TODO: the function below is not used, and it is not clear what that
     // first argument is supposed to be
-    addCustomType(customType) {
+    addCustomType(customType: any) {
         this.customTypes[customType.type] = customType;
     }
 
@@ -38,7 +39,7 @@ class Serializer {
      * @param {String} type Type to Checks
      * @return {Boolean} True if type can be assigned
      */
-    static typeCanAssign(type) {
+    static typeCanAssign(type: string): boolean {
         return type !== BaseTypes.TYPES.CLASSINSTANCE && type !== BaseTypes.TYPES.LIST;
     }
 
@@ -47,9 +48,9 @@ class Serializer {
      * @param {Function} classObj reference to the class (not an instance!)
      * @param {String} classId Unit specifying a class ID
      */
-    registerClass(classObj, classId) {
+    registerClass(classObj: any, classId?: string) {
         // if no classId is specified, hash one from the class name
-        classId = classId ? classId : Utils.hashStr(classObj.name);
+        classId = classId ? classId : `${Utils.hashStr(classObj.name)}`;
         if (this.registeredClasses[classId]) {
             console.error(`Serializer: accidental override of classId ${classId} when registering class`, classObj);
         }
@@ -57,7 +58,7 @@ class Serializer {
         this.registeredClasses[classId] = classObj;
     }
 
-    deserialize(dataBuffer, byteOffset) {
+    deserialize(dataBuffer: ArrayBufferLike, byteOffset: number = 0) {
         byteOffset = byteOffset ? byteOffset : 0;
         let localByteOffset = 0;
 
@@ -66,7 +67,7 @@ class Serializer {
         let objectClassId = dataView.getUint8(byteOffset + localByteOffset);
 
         // todo if classId is 0 - take care of dynamic serialization.
-        let objectClass = this.registeredClasses[objectClassId];
+        let objectClass: any = this.registeredClasses[objectClassId];
         if (objectClass == null) {
             console.error('Serializer: Found a class which was not registered.  Please use serializer.registerClass() to register all serialized classes.');
         }
@@ -84,7 +85,7 @@ class Serializer {
         return { obj, byteOffset: localByteOffset };
     }
 
-    writeDataView(dataView, value, bufferOffset, netSchemProp) {
+    writeDataView(dataView: DataView, value: any, bufferOffset: number, netSchemProp: any) {
         if (netSchemProp.type === BaseTypes.TYPES.FLOAT32) {
             dataView.setFloat32(bufferOffset, value);
         } else if (netSchemProp.type === BaseTypes.TYPES.INT32) {
@@ -154,7 +155,7 @@ class Serializer {
 
     }
 
-    readDataView(dataView, bufferOffset, netSchemProp) {
+    readDataView(dataView: DataView, bufferOffset: number, netSchemProp: any): { data: any, bufferSize: number } {
         let data, bufferSize;
 
         if (netSchemProp.type === BaseTypes.TYPES.FLOAT32) {
@@ -214,35 +215,35 @@ class Serializer {
         return { data: data, bufferSize: bufferSize };
     }
 
-    getTypeByteSize(type) {
+    getTypeByteSize(type: string) {
 
         switch (type) {
-        case BaseTypes.TYPES.FLOAT32: {
-            return Float32Array.BYTES_PER_ELEMENT;
-        }
-        case BaseTypes.TYPES.INT32: {
-            return Int32Array.BYTES_PER_ELEMENT;
-        }
-        case BaseTypes.TYPES.INT16: {
-            return Int16Array.BYTES_PER_ELEMENT;
-        }
-        case BaseTypes.TYPES.INT8: {
-            return Int8Array.BYTES_PER_ELEMENT;
-        }
-        case BaseTypes.TYPES.UINT8: {
-            return Uint8Array.BYTES_PER_ELEMENT;
-        }
-
-        // not one of the basic properties
-        default: {
-            if (type === undefined) {
-                throw 'netScheme property declared without type attribute!';
-            } else if (this.customTypes[type] === null) {
-                throw `netScheme property ${type} undefined! Did you forget to add it to the serializer?`;
-            } else {
-                return this.customTypes[type].BYTES_PER_ELEMENT;
+            case BaseTypes.TYPES.FLOAT32: {
+                return Float32Array.BYTES_PER_ELEMENT;
             }
-        }
+            case BaseTypes.TYPES.INT32: {
+                return Int32Array.BYTES_PER_ELEMENT;
+            }
+            case BaseTypes.TYPES.INT16: {
+                return Int16Array.BYTES_PER_ELEMENT;
+            }
+            case BaseTypes.TYPES.INT8: {
+                return Int8Array.BYTES_PER_ELEMENT;
+            }
+            case BaseTypes.TYPES.UINT8: {
+                return Uint8Array.BYTES_PER_ELEMENT;
+            }
+
+            // not one of the basic properties
+            default: {
+                if (type === undefined) {
+                    throw 'netScheme property declared without type attribute!';
+                } else if (this.customTypes[type] === null) {
+                    throw `netScheme property ${type} undefined! Did you forget to add it to the serializer?`;
+                } else {
+                    return this.customTypes[type].BYTES_PER_ELEMENT;
+                }
+            }
 
         }
 

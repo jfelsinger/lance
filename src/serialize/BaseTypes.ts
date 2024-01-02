@@ -1,3 +1,7 @@
+export type BaseTypeValues =
+    | 'FLOAT32'
+    | 'INT32' | 'INT16' | 'INT8' | 'UINT8'
+    | 'STRING' | 'CLASSINSTANCE' | 'LIST'
 
 /**
  * The BaseTypes class defines the base types used in Lance.
@@ -17,7 +21,9 @@
  *         };
  *     }
  */
-class BaseTypes {}
+export class BaseTypes {
+    static TYPES: { [key in BaseTypeValues]: key };
+}
 
 /**
  * @type {object}
@@ -32,11 +38,11 @@ class BaseTypes {}
  */
 BaseTypes.TYPES = {
 
-  /**
-   * Seriablizable float
-   * @alias TYPES.FLOAT32
-   * @memberof! BaseTypes#
-   */
+    /**
+     * Seriablizable float
+     * @alias TYPES.FLOAT32
+     * @memberof! BaseTypes#
+     */
     FLOAT32: 'FLOAT32',
 
     /**
@@ -87,6 +93,6 @@ BaseTypes.TYPES = {
      * @memberof! BaseTypes#
      */
     LIST: 'LIST'
-};
+} as const;
 
 export default BaseTypes;

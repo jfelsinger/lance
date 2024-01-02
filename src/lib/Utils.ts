@@ -1,6 +1,6 @@
 export default class Utils {
 
-    static hashStr(str: string, bits: number) {
+    static hashStr(str: string, bits: number = 8) {
         let hash = 5381;
         let i = str.length;
         bits = bits ? bits : 8;

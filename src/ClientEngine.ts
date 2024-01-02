@@ -144,7 +144,7 @@ class ClientEngine {
                     this.messageIndex = Number(this.gameEngine.playerId) * 10000;
                 });
 
-                this.socket.on('worldUpdate', (worldData) => {
+            any    this.socket.on('worldUpdate', (worldData) => {
                     this.inboundMessages.push(worldData);
                 });
 

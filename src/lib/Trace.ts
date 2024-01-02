@@ -1,4 +1,4 @@
-enum TRACE_LEVEL {
+export enum TRACE_LEVEL {
     TRACE_ALL = 0,
     TRACE_DEBUG = 1,
     TRACE_INFO = 2,
@@ -14,7 +14,7 @@ enum TRACE_LEVEL {
  * example, setting traceLevel to Trace.TRACE_INFO will cause info,
  * warn, and error traces to be recorded.
  */
-class Trace {
+export class Trace {
     traceBuffer: any[] = [];
     step: string;
 

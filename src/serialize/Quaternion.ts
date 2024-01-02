@@ -9,7 +9,7 @@ const MAX_DEL_THETA = 0.2;
  * A Quaternion is a geometric object which can be used to
  * represent a three-dimensional rotation.
  */
-class Quaternion extends Serializable {
+export class Quaternion extends Serializable {
 
     static get netScheme() {
         return {
@@ -20,29 +20,15 @@ class Quaternion extends Serializable {
         };
     }
 
-    /**
-    * Creates an instance of a Quaternion.
-    * @param {Number} w - first value
-    * @param {Number} x - second value
-    * @param {Number} y - third value
-    * @param {Number} z - fourth value
-    * @return {Quaternion} v - the new Quaternion
-    */
-    constructor(w, x, y, z) {
+    constructor(public w: number, public x: number, public y: number, public z: number) {
         super();
-        this.w = w;
-        this.x = x;
-        this.y = y;
-        this.z = z;
-
-        return this;
     }
 
     /**
      * Formatted textual description of the Quaternion.
      * @return {String} description
      */
-    toString() {
+    toString(): string {
         function round3(x) { return Math.round(x * 1000) / 1000; }
         if (SHOW_AS_AXIS_ANGLE) {
             let axisAngle = this.toAxisAngle();
@@ -57,7 +43,7 @@ class Quaternion extends Serializable {
      * @param {Quaternion} sourceObj the quaternion to copy from
      * @return {Quaternion} returns self
      */
-    copy(sourceObj) {
+    copy(sourceObj: Quaternion): this {
         this.set(sourceObj.w, sourceObj.x, sourceObj.y, sourceObj.z);
         return this;
     }
@@ -71,7 +57,7 @@ class Quaternion extends Serializable {
      * @param {Number} z z-value
      * @return {Quaternion} returns self
      */
-    set(w, x, y, z) {
+    set(w: number, x: number, y: number, z: number): this {
         this.w = w;
         this.x = x;
         this.y = y;
@@ -85,7 +71,7 @@ class Quaternion extends Serializable {
      *
      * @return {Object} contains two attributes: axis (ThreeVector) and angle.
      */
-    toAxisAngle() {
+    toAxisAngle(): { axis: ThreeVector, angle: number } {
 
         // assuming quaternion normalised then w is less than 1, so term always positive.
         let axis = new ThreeVector(1, 0, 0);
@@ -104,7 +90,7 @@ class Quaternion extends Serializable {
         return { axis, angle };
     }
 
-    normalize() {
+    normalize(): this {
         let l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
         if (l === 0) {
             this.x = 0;
@@ -129,7 +115,7 @@ class Quaternion extends Serializable {
      * @param {Number} angle angle in radians
      * @return {Quaternion} returns self
      */
-    setFromAxisAngle(axis, angle) {
+    setFromAxisAngle(axis: ThreeVector, angle: number): this {
 
         if (angle < 0)
             angle += Math.PI * 2;
@@ -148,7 +134,7 @@ class Quaternion extends Serializable {
      *
      * @return {Quaternion} returns self
      */
-    conjugate() {
+    conjugate(): this {
         this.x *= -1;
         this.y *= -1;
         this.z *= -1;
@@ -162,7 +148,7 @@ class Quaternion extends Serializable {
      * @param {Quaternion} other The other quaternion
      * @return {Quaternion} returns self
      */
-    multiply(other) {
+    multiply(other: Quaternion): this {
         let aw = this.w, ax = this.x, ay = this.y, az = this.z;
         let bw = other.w, bx = other.x, by = other.y, bz = other.z;
 
@@ -184,7 +170,7 @@ class Quaternion extends Serializable {
      * @param {Number} bending The percentage to interpolate
      * @return {Quaternion} returns self
      */
-    slerp(target, bending) {
+    slerp(target: Quaternion, bending: number): this {
 
         if (bending <= 0) return this;
         if (bending >= 1) return this.copy(target);
@@ -192,7 +178,7 @@ class Quaternion extends Serializable {
         let aw = this.w, ax = this.x, ay = this.y, az = this.z;
         let bw = target.w, bx = target.x, by = target.y, bz = target.z;
 
-        let cosHalfTheta = aw*bw + ax*bx + ay*by + az*bz;
+        let cosHalfTheta = aw * bw + ax * bx + ay * by + az * bz;
         if (cosHalfTheta < 0) {
             this.set(-bw, -bx, -by, -bz);
             cosHalfTheta = -cosHalfTheta;
@@ -205,10 +191,10 @@ class Quaternion extends Serializable {
             return this;
         }
 
-        let sqrSinHalfTheta = 1.0 - cosHalfTheta*cosHalfTheta;
+        let sqrSinHalfTheta = 1.0 - cosHalfTheta * cosHalfTheta;
         if (sqrSinHalfTheta < Number.EPSILON) {
             let s = 1 - bending;
-            this.set(s*aw + bending*this.w, s*ax + bending*this.x, s*ay + bending*this.y, s*az + bending*this.z);
+            this.set(s * aw + bending * this.w, s * ax + bending * this.x, s * ay + bending * this.y, s * az + bending * this.z);
             return this.normalize();
         }
 
@@ -217,12 +203,12 @@ class Quaternion extends Serializable {
         let delTheta = bending * halfTheta;
         if (Math.abs(delTheta) > MAX_DEL_THETA)
             delTheta = MAX_DEL_THETA * Math.sign(delTheta);
-        let ratioA = Math.sin(halfTheta - delTheta)/sinHalfTheta;
-        let ratioB = Math.sin(delTheta)/sinHalfTheta;
-        this.set(aw*ratioA + this.w*ratioB,
-            ax*ratioA + this.x*ratioB,
-            ay*ratioA + this.y*ratioB,
-            az*ratioA + this.z*ratioB);
+        let ratioA = Math.sin(halfTheta - delTheta) / sinHalfTheta;
+        let ratioB = Math.sin(delTheta) / sinHalfTheta;
+        this.set(aw * ratioA + this.w * ratioB,
+            ax * ratioA + this.x * ratioB,
+            ay * ratioA + this.y * ratioB,
+            az * ratioA + this.z * ratioB);
         return this;
     }
     /* eslint-enable */
