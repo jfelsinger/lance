@@ -1,4 +1,4 @@
-import SyncStrategy from './SyncStrategy'
+import { SyncStrategy, type SYNC_APPLIED } from './SyncStrategy'
 import { ClientEngine } from '../ClientEngine';
 import { GameEngine } from '../GameEngine';
 
@@ -12,12 +12,10 @@ export class FrameSyncStrategy extends SyncStrategy {
     constructor(clientEngine: ClientEngine, inputOptions: any) {
         const options = Object.assign({}, defaults, inputOptions);
         super(clientEngine, options);
-
-        this.gameEngine = this.clientEngine.gameEngine;
     }
 
     // apply a new sync
-    applySync(sync, required) {
+    override applySync(sync: any, _required: boolean): SYNC_APPLIED | undefined {
 
         this.needFirstSync = false;
         this.gameEngine.trace.debug(() => 'framySync applying sync');
@@ -35,21 +33,20 @@ export class FrameSyncStrategy extends SyncStrategy {
 
         // destroy objects
         for (let objId in (world.objects)) {
-
             let objEvents = sync.syncObjects[objId];
 
             // if this was a full sync, and we did not get a corresponding object,
             // remove the local object
-            if (sync.fullUpdate && !objEvents && objId < this.gameEngine.options.clientIDSpace) {
+            if (sync.fullUpdate && !objEvents && +objId < this.gameEngine.options.clientIDSpace) {
                 this.gameEngine.removeObjectFromWorld(objId);
                 continue;
             }
 
-            if (!objEvents || objId >= this.gameEngine.options.clientIDSpace)
+            if (!objEvents || +objId >= this.gameEngine.options.clientIDSpace)
                 continue;
 
             // if we got an objectDestroy event, destroy the object
-            objEvents.forEach((e) => {
+            objEvents.forEach((e: any) => {
                 if (e.eventName === 'objectDestroy') this.gameEngine.removeObjectFromWorld(objId);
             });
         }

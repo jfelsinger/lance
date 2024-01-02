@@ -1,6 +1,8 @@
 import Serializable from './Serializable';
 import BaseTypes from './BaseTypes';
 
+function round3(x: number) { return Math.round(x * 1000) / 1000; }
+
 /**
  * A ThreeVector is a geometric object which is completely described
  * by three values.
@@ -24,7 +26,6 @@ export class ThreeVector extends Serializable {
      * @return {String} description
      */
     toString(): string {
-        function round3(x) { return Math.round(x * 1000) / 1000; }
         return `[${round3(this.x)}, ${round3(this.y)}, ${round3(this.z)}]`;
     }
 

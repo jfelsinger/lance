@@ -1,6 +1,7 @@
-import SyncStrategy from './SyncStrategy';
+import SyncStrategy, { SYNC_APPLIED } from './SyncStrategy';
 import { ClientEngine } from '../ClientEngine';
 import { GameEngine } from '../GameEngine';
+import { InputDescriptor } from '../types';
 
 const defaults = {
     syncsBufferLength: 5,
@@ -21,10 +22,8 @@ export class ExtrapolateStrategy extends SyncStrategy {
     };
 
     constructor(clientEngine: ClientEngine, inputOptions: any) {
-
         const options = Object.assign({}, defaults, inputOptions);
         super(clientEngine, options);
-
         this.gameEngine.on('client__processInput', this.clientInputSave.bind(this));
     }
 
@@ -48,11 +47,11 @@ export class ExtrapolateStrategy extends SyncStrategy {
     }
 
     // apply a new sync
-    applySync(sync, required) {
+    override applySync(sync: any, required: boolean): SYNC_APPLIED | undefined {
 
         // if sync is in the future, we are not ready to apply yet.
         if (!required && sync.stepCount > this.gameEngine.world.stepCount) {
-            return null;
+            return;
         }
 
         this.gameEngine.trace.debug(() => 'extrapolate applying sync');
@@ -82,7 +81,7 @@ export class ExtrapolateStrategy extends SyncStrategy {
             let localShadowObj = this.gameEngine.findLocalShadow(ev.objectInstance);
             if (localShadowObj) {
                 // case 1: this object has a local shadow object on the client
-                this.gameEngine.trace.debug(() => `object ${ev.objectInstance.id} replacing local shadow ${localShadowObj.id}`);
+                this.gameEngine.trace.debug(() => `object ${ev.objectInstance.id} replacing local shadow ${localShadowObj?.id}`);
 
                 if (!world.objects.hasOwnProperty(ev.objectInstance.id)) {
                     let newObj = this.addNewObject(ev.objectInstance.id, ev.objectInstance, { visible: false });
@@ -118,10 +117,10 @@ export class ExtrapolateStrategy extends SyncStrategy {
         for (world.stepCount = serverStep; world.stepCount < clientStep;) {
 
             if (this.recentInputs[world.stepCount]) {
-                this.recentInputs[world.stepCount].forEach(inputDesc => {
+                this.recentInputs[world.stepCount].forEach((inputDesc: InputDescriptor) => {
 
                     // only movement inputs are re-enacted
-                    if (!inputDesc.options || !inputDesc.options.movement) return;
+                    if (!inputDesc?.options?.movement) return;
 
                     this.gameEngine.trace.trace(() => `extrapolate re-enacting movement input[${inputDesc.messageIndex}]: ${inputDesc.input}`);
                     this.gameEngine.processInput(inputDesc, this.gameEngine.playerId);
@@ -139,7 +138,7 @@ export class ExtrapolateStrategy extends SyncStrategy {
         for (let objId in world.objects) {
 
             // shadow objects are not bent
-            if (objId >= this.gameEngine.options.clientIDSpace)
+            if (+objId >= this.gameEngine.options.clientIDSpace)
                 continue;
 
             // TODO: using == instead of === because of string/number mismatch
@@ -150,8 +149,8 @@ export class ExtrapolateStrategy extends SyncStrategy {
             let isLocal = (obj.playerId == this.gameEngine.playerId); // eslint-disable-line eqeqeq
             let bending = isLocal ? this.options.localObjBending : this.options.remoteObjBending;
             obj.bendToCurrentState(bending, this.gameEngine.worldSettings, isLocal, this.options.bendingIncrements);
-            if (typeof obj.refreshRenderObject === 'function')
-                obj.refreshRenderObject();
+            if (typeof (obj as any).refreshRenderObject === 'function')
+                (obj as any).refreshRenderObject();
             this.gameEngine.trace.trace(() => `object[${objId}] ${obj.bendingToString()}`);
         }
 
@@ -169,16 +168,16 @@ export class ExtrapolateStrategy extends SyncStrategy {
 
             // if this was a full sync, and we did not get a corresponding object,
             // remove the local object
-            if (sync.fullUpdate && !objEvents && objId < this.gameEngine.options.clientIDSpace) {
+            if (sync.fullUpdate && !objEvents && +objId < this.gameEngine.options.clientIDSpace) {
                 this.gameEngine.removeObjectFromWorld(objId);
                 continue;
             }
 
-            if (!objEvents || objId >= this.gameEngine.options.clientIDSpace)
+            if (!objEvents || +objId >= this.gameEngine.options.clientIDSpace)
                 continue;
 
             // if we got an objectDestroy event, destroy the object
-            objEvents.forEach((e) => {
+            objEvents.forEach((e: any) => {
                 if (e.eventName === 'objectDestroy') this.gameEngine.removeObjectFromWorld(objId);
             });
         }

@@ -205,7 +205,8 @@ class ServerEngine {
         });
 
         const roomObjects = Object.keys(world.objects)
-            .filter(o => world.objects[o]._roomName === roomName);
+            .filter((o) => world.objects[o as any]._roomName === roomName);
+
         for (let objId of roomObjects) {
             let obj = world.objects[objId as any];
             let prevObject = this.objMemory[objId as any];
@@ -356,7 +357,7 @@ class ServerEngine {
         socket.on('trace', function(traceData) {
             traceData = JSON.parse(traceData);
             let traceString = '';
-            traceData.forEach(t => { traceString += `[${t.time}]${t.step}>${t.data}\n`; });
+            traceData.forEach((t: any) => { traceString += `[${t.time}]${t.step}>${t.data}\n`; });
             fs.appendFile(`${that.options.tracesPath}client.${playerId}.trace`, traceString, err => { if (err) throw err; });
         });
 

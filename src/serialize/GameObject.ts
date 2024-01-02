@@ -98,7 +98,7 @@ export class GameObject extends Serializable {
         return 'no bending';
     }
 
-    saveState<TThis extends this>(other: TThis) {
+    saveState<TThis extends this>(other?: TThis) {
         this.savedCopy = (new (this as any).constructor(this.gameEngine, { id: null }));
         this.savedCopy?.syncTo(other ? other : this);
     }

@@ -3,7 +3,7 @@ import { GameEngine } from '../GameEngine';
 
 export type SYNC_APPLIED = 'SYNC_APPLIED';
 
-export default class SyncStrategy {
+export class SyncStrategy {
     clientEngine: ClientEngine;
     gameEngine: GameEngine;
     needFirstSync: boolean = true;
@@ -28,7 +28,7 @@ export default class SyncStrategy {
         this.requiredSyncs = [];
     }
 
-    applySync(_sync: any, _uh: boolean): SYNC_APPLIED | undefined {
+    applySync(_sync: any, required: boolean): SYNC_APPLIED | undefined {
         return;
     }
 
@@ -150,3 +150,5 @@ export default class SyncStrategy {
     }
 
 }
+
+export default SyncStrategy;

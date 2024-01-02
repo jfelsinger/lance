@@ -138,50 +138,51 @@ export class ClientEngine {
      * @param {Object} [options] additional socket.io options
      * @return {Promise} Resolved when the connection is made to the server
      */
-    connect(options = {}) {
-
-        let connectSocket = (matchMakerAnswer) => {
-            return new Promise((resolve, reject) => {
-
-                if (matchMakerAnswer.status !== 'ok')
-                    reject('matchMaker failed status: ' + matchMakerAnswer.status);
-
-                if (this.options.verbose)
-                    console.log(`connecting to game server ${matchMakerAnswer.serverURL}`);
-                this.socket = io(matchMakerAnswer.serverURL, options);
-
-                this.networkMonitor.registerClient(this);
-
-                this.socket.once('connect', () => {
-                    if (this.options.verbose)
-                        console.log('connection made');
-                    resolve();
-                });
-
-                this.socket.once('error', (error) => {
-                    reject(error);
-                });
-
-                this.socket.on('playerJoined', (playerData) => {
-                    this.gameEngine.playerId = playerData.playerId;
-                    this.messageIndex = Number(this.gameEngine.playerId) * 10000;
-                });
-
-            any    this.socket.on('worldUpdate', (worldData) => {
-                    this.inboundMessages.push(worldData);
-                });
-
-                this.socket.on('roomUpdate', (roomData) => {
-                    this.gameEngine.emit('client__roomUpdate', roomData);
-                });
-            });
-        };
-
+    async connect(options: any = {}): Promise<void> {
         let matchmaker = Promise.resolve({ serverURL: this.options.serverURL, status: 'ok' });
         if (this.options.matchmaker)
             matchmaker = Utils.httpGetPromise(this.options.matchmaker);
 
-        return matchmaker.then(connectSocket);
+        let matchMakerAnswer = await matchmaker;
+
+        if (matchMakerAnswer.status !== 'ok')
+            throw ('matchMaker failed status: ' + matchMakerAnswer.status);
+
+        if (this.options.verbose)
+            console.log(`connecting to game server ${matchMakerAnswer.serverURL}`);
+
+        const socket = this.socket = io(matchMakerAnswer.serverURL, options);
+        this.networkMonitor.registerClient(this);
+
+        await new Promise<void>((resolve, reject) => {
+            let resolved = false;
+            socket.once('connect', () => {
+                if (resolved) { return; }
+                resolved = true;
+                if (this.options.verbose)
+                    console.log('connection made');
+                resolve();
+            });
+
+            socket.once('error', (error) => {
+                if (resolved) { return; }
+                resolved = true;
+                reject(error);
+            });
+        });
+
+        socket.on('playerJoined', (playerData) => {
+            this.gameEngine.playerId = playerData.playerId;
+            this.messageIndex = Number(this.gameEngine.playerId) * 10000;
+        });
+
+        socket.on('worldUpdate', (worldData) => {
+            this.inboundMessages.push(worldData);
+        });
+
+        socket.on('roomUpdate', (roomData) => {
+            this.gameEngine.emit('client__roomUpdate', roomData);
+        });
     }
 
     /**
@@ -190,7 +191,7 @@ export class ClientEngine {
      * @return {Promise} Resolves once the Renderer has been initialized, and the game is
      * ready to connect
      */
-    async start() {
+    async start(): Promise<any> {
         this.stopped = false;
         this.resolved = false;
         // initialize the renderer
@@ -230,7 +231,7 @@ export class ClientEngine {
                 });
         }
 
-        return new Promise((resolve, reject) => {
+        return await new Promise<any>((resolve, reject) => {
             this.resolveGame = resolve;
             if (this.socket) {
                 this.socket.on('disconnect', () => {
@@ -372,7 +373,7 @@ export class ClientEngine {
      * @param {String} input - string representing the input
      * @param {Object} inputOptions - options for the input
      */
-    sendInput(input, inputOptions) {
+    sendInput(input: String, inputOptions: any) {
         let inputEvent = {
             command: 'move',
             data: {
@@ -401,10 +402,10 @@ export class ClientEngine {
     }
 
     // handle a message that has been received from the server
-    handleInboundMessage(syncData) {
+    handleInboundMessage(syncData: any) {
 
         let syncEvents = this.networkTransmitter.deserializePayload(syncData).events;
-        let syncHeader = syncEvents.find((e) => e.eventName === 'syncHeader');
+        let syncHeader = syncEvents.find((e: any) => e.eventName === 'syncHeader');
 
         // emit that a snapshot has been received
         if (!this.gameEngine.highestServerStep || syncHeader.stepCount > this.gameEngine.highestServerStep)
@@ -418,7 +419,7 @@ export class ClientEngine {
         this.gameEngine.trace.info(() => `========== inbound world update ${syncHeader.stepCount} ==========`);
 
         // finally update the stepCount
-        if (syncHeader.stepCount > this.gameEngine.world.stepCount + this.synchronizer.syncStrategy.STEP_DRIFT_THRESHOLDS.clientReset) {
+        if (syncHeader.stepCount > this.gameEngine.world.stepCount + this.synchronizer!.syncStrategy.STEP_DRIFT_THRESHOLDS.clientReset) {
             this.gameEngine.trace.info(() => `========== world step count updated from ${this.gameEngine.world.stepCount} to  ${syncHeader.stepCount} ==========`);
             this.gameEngine.emit('client__stepReset', { oldStep: this.gameEngine.world.stepCount, newStep: syncHeader.stepCount });
             this.gameEngine.world.stepCount = syncHeader.stepCount;

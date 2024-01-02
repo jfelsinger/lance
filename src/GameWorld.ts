@@ -72,7 +72,7 @@ export class GameWorld {
             conditions.push(!('playerId' in query) || query.playerId !== null && object.playerId === query.playerId);
 
             // instance type conditio
-            conditions.push(!('instanceType' in query) || query.instanceType !== null && object instanceof query.instanceType);
+            conditions.push(!('instanceType' in query) || query.instanceType !== null && (object instanceof (query.instanceType as any)));
 
             // components conditions
             if ('components' in query) {

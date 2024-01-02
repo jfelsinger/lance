@@ -4,6 +4,7 @@ import Timer from './game/Timer';
 import { Trace, TRACE_LEVEL } from './lib/Trace';
 import GameObject from './serialize/GameObject';
 import Serializer from './serialize/Serializer';
+import { InputDescriptor } from './types';
 
 // place the game engine in the LANCE globals
 const isServerSide = (typeof window === 'undefined');
@@ -16,12 +17,6 @@ export type EngineOptions = {
     traceLevel: TRACE_LEVEL;
     clientIDSpace: number;
 };
-
-export type InputDescriptor = {
-    input: string;
-    messageIndex: number;
-    step: number;
-}
 
 /**
  * The GameEngine contains the game logic.  Extend this class
@@ -52,6 +47,8 @@ export class GameEngine extends EventEmitter {
     options: EngineOptions;
     physicsEngine?: any;
     ignorePhysics?: boolean;
+    ignoreInputs?: boolean;
+    renderer?: any;
 
     /**
       * Create a game engine instance.  This needs to happen
@@ -138,7 +135,7 @@ export class GameEngine extends EventEmitter {
       * @param {Number} dt - elapsed time since last step was called.  (optional)
       * @param {Boolean} physicsOnly - do a physics step only, no game logic
       */
-    step(isReenact: boolean, t: number, dt?: number, physicsOnly?: boolean) {
+    step(isReenact: boolean, t?: number, dt?: number, physicsOnly?: boolean) {
         // physics-only step
         if (physicsOnly) {
             if (dt) dt /= 1000; // physics engines work in seconds
@@ -156,7 +153,7 @@ export class GameEngine extends EventEmitter {
         this.emit('preStep', { step, isReenact, dt });
 
         // skip physics for shadow objects during re-enactment
-        function objectFilter(o) {
+        function objectFilter(o: any) {
             return !isReenact || o.id < clientIDSpace;
         }
 
@@ -240,7 +237,7 @@ export class GameEngine extends EventEmitter {
      * @param {Number} playerId - the player ID
      * @param {Boolean} isServer - indicate if this function is being called on the server side
      */
-    processInput(inputDesc: InputDescriptor, playerId: number, isServer: boolean) {
+    processInput(inputDesc: InputDescriptor, playerId: number, isServer: boolean = false) {
         this.trace.info(() => `game engine processing input[${inputDesc.messageIndex}] <${inputDesc.input}> from playerId ${playerId}`);
     }
 

@@ -5,6 +5,8 @@ import ThreeVector from './ThreeVector';
 const SHOW_AS_AXIS_ANGLE = true;
 const MAX_DEL_THETA = 0.2;
 
+function round3(x: number) { return Math.round(x * 1000) / 1000; }
+
 /**
  * A Quaternion is a geometric object which can be used to
  * represent a three-dimensional rotation.
@@ -29,7 +31,6 @@ export class Quaternion extends Serializable {
      * @return {String} description
      */
     toString(): string {
-        function round3(x) { return Math.round(x * 1000) / 1000; }
         if (SHOW_AS_AXIS_ANGLE) {
             let axisAngle = this.toAxisAngle();
             return `[${round3(axisAngle.angle)},${axisAngle.axis.toString()}]`;

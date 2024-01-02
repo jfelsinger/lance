@@ -7,9 +7,9 @@
     },
     "compilerOptions": {
         "lib": [
-            "DOM",
-            "DOM.Iterable",
-            "ESNext"
+            "dom",
+            "dom.iterable",
+            "esnext"
         ],
         "module": "ESNext",
         "target": "ESNext",
