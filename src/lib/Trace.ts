@@ -16,26 +16,25 @@ export enum TRACE_LEVEL {
  */
 export class Trace {
     traceBuffer: any[] = [];
-    step: string;
+    step: string | number = 'initializing';
 
     error: any;
     warn: any;
     info: any;
     debug: any;
+    trace: any;
 
     constructor(public options: { traceLevel: TRACE_LEVEL } = { traceLevel: TRACE_LEVEL.TRACE_DEBUG }) {
         this.options = Object.assign({
             traceLevel: Trace.TRACE_DEBUG
         }, options);
 
-        this.step = 'initializing';
-
         // syntactic sugar functions
-        this.error = this.trace.bind(this, Trace.TRACE_ERROR);
-        this.warn = this.trace.bind(this, Trace.TRACE_WARN);
-        this.info = this.trace.bind(this, Trace.TRACE_INFO);
-        this.debug = this.trace.bind(this, Trace.TRACE_DEBUG);
-        this.trace = this.trace.bind(this, Trace.TRACE_ALL);
+        this.error = this._trace.bind(this, Trace.TRACE_ERROR);
+        this.warn = this._trace.bind(this, Trace.TRACE_WARN);
+        this.info = this._trace.bind(this, Trace.TRACE_INFO);
+        this.debug = this._trace.bind(this, Trace.TRACE_DEBUG);
+        this.trace = this._trace.bind(this, Trace.TRACE_ALL);
     }
 
     /**
@@ -80,7 +79,7 @@ export class Trace {
      */
     static get TRACE_NONE() { return TRACE_LEVEL.TRACE_NONE; }
 
-    trace(level: TRACE_LEVEL, dataCB: any) {
+    private _trace(level: TRACE_LEVEL, dataCB?: any) {
 
         // all traces must be functions which return strings
         if (typeof dataCB !== 'function') {
@@ -103,7 +102,7 @@ export class Trace {
         return this.traceBuffer.length;
     }
 
-    setStep(s: string) {
+    setStep(s: number | string) {
         this.step = s;
     }
 }

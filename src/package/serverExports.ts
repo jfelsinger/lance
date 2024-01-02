@@ -12,22 +12,22 @@ import DynamicObject from '../serialize/DynamicObject.js';
 import PhysicalObject2D from '../serialize/PhysicalObject2D.js';
 import PhysicalObject3D from '../serialize/PhysicalObject3D.js';
 import ServerEngine from '../ServerEngine.js';
-import Lib from '../lib/lib.js';
+import * as Lib from '../lib/lib.js';
 
 export {
-  GameEngine,
-  GameWorld,
-  P2PhysicsEngine,
-  SimplePhysicsEngine,
-  CannonPhysicsEngine,
-  BaseTypes,
-  TwoVector,
-  ThreeVector,
-  Quaternion,
-  GameObject,
-  DynamicObject,
-  PhysicalObject2D,
-  PhysicalObject3D,
-  ServerEngine,
-  Lib,
+    GameEngine,
+    GameWorld,
+    P2PhysicsEngine,
+    SimplePhysicsEngine,
+    CannonPhysicsEngine,
+    BaseTypes,
+    TwoVector,
+    ThreeVector,
+    Quaternion,
+    GameObject,
+    DynamicObject,
+    PhysicalObject2D,
+    PhysicalObject3D,
+    ServerEngine,
+    Lib,
 };

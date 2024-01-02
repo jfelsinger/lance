@@ -27,7 +27,7 @@ export default class NetworkedEventFactory {
             networkedEvent.netScheme = Object.assign({}, this.netScheme);
 
             // copy properties from the networkedEvent instance to its ad-hoc netsScheme
-            for (let property of Object.keys(this.netScheme)) {
+            for (let property in (this.netScheme)) {
                 networkedEvent[property] = payload[property];
             }
 

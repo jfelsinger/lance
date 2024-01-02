@@ -1,4 +1,6 @@
 import SyncStrategy from './SyncStrategy';
+import { ClientEngine } from '../ClientEngine';
+import { GameEngine } from '../GameEngine';
 
 const defaults = {
     syncsBufferLength: 5,
@@ -11,24 +13,23 @@ const defaults = {
 };
 
 export default class ExtrapolateStrategy extends SyncStrategy {
+    recentInputs: Record<number, any> = {};
+    readonly STEP_DRIFT_THRESHOLDS = {
+        onServerSync: { MAX_LEAD: 2, MAX_LAG: 3 }, // max step lead/lag allowed after every server sync
+        onEveryStep: { MAX_LEAD: 7, MAX_LAG: 4 }, // max step lead/lag allowed at every step
+        clientReset: 40 // if we are behind this many steps, just reset the step counter
+    };
 
-    constructor(clientEngine, inputOptions) {
+    constructor(clientEngine: ClientEngine, inputOptions: any) {
 
         const options = Object.assign({}, defaults, inputOptions);
         super(clientEngine, options);
 
-        this.lastSync = null;
-        this.recentInputs = {};
         this.gameEngine.on('client__processInput', this.clientInputSave.bind(this));
-        this.STEP_DRIFT_THRESHOLDS = {
-            onServerSync: { MAX_LEAD: 2, MAX_LAG: 3 }, // max step lead/lag allowed after every server sync
-            onEveryStep: { MAX_LEAD: 7, MAX_LAG: 4 }, // max step lead/lag allowed at every step
-            clientReset: 40 // if we are behind this many steps, just reset the step counter
-        };
     }
 
     // keep a buffer of inputs so that we can replay them on extrapolation
-    clientInputSave(inputEvent) {
+    clientInputSave(inputEvent: any) {
 
         // if no inputs have been stored for this step, create an array
         if (!this.recentInputs[inputEvent.input.step]) {
@@ -38,8 +39,8 @@ export default class ExtrapolateStrategy extends SyncStrategy {
     }
 
     // clean up the input buffer
-    cleanRecentInputs(lastServerStep) {
-        for (let input of Object.keys(this.recentInputs)) {
+    cleanRecentInputs(lastServerStep: number) {
+        for (let input in this.recentInputs) {
             if (this.recentInputs[input][0].step <= lastServerStep) {
                 delete this.recentInputs[input];
             }
@@ -71,7 +72,7 @@ export default class ExtrapolateStrategy extends SyncStrategy {
         this.needFirstSync = false;
         let world = this.gameEngine.world;
         let serverStep = sync.stepCount;
-        for (let ids of Object.keys(sync.syncObjects)) {
+        for (let ids in sync.syncObjects) {
 
             // TODO: we are currently taking only the first event out of
             // the events that may have arrived for this object
@@ -135,7 +136,7 @@ export default class ExtrapolateStrategy extends SyncStrategy {
         //
         // bend back to original state
         //
-        for (let objId of Object.keys(world.objects)) {
+        for (let objId in world.objects) {
 
             // shadow objects are not bent
             if (objId >= this.gameEngine.options.clientIDSpace)
@@ -155,14 +156,14 @@ export default class ExtrapolateStrategy extends SyncStrategy {
         }
 
         // trace object state after sync
-        for (let objId of Object.keys(world.objects)) {
+        for (let objId in world.objects) {
             this.gameEngine.trace.trace(() => `object after extrapolate replay: ${world.objects[objId].toString()}`);
         }
 
         // destroy objects
         // TODO: use world.forEachObject((id, ob) => {});
         // TODO: identical code is in InterpolateStrategy
-        for (let objId of Object.keys(world.objects)) {
+        for (let objId in (world.objects)) {
 
             let objEvents = sync.syncObjects[objId];
 

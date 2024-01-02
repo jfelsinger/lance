@@ -22,7 +22,7 @@ export default class FrameSyncStrategy extends SyncStrategy {
         this.gameEngine.trace.debug(() => 'framySync applying sync');
         let world = this.gameEngine.world;
 
-        for (let ids of Object.keys(sync.syncObjects)) {
+        for (let ids in (sync.syncObjects)) {
             let ev = sync.syncObjects[ids][0];
             let curObj = world.objects[ev.objectInstance.id];
             if (curObj) {
@@ -33,7 +33,7 @@ export default class FrameSyncStrategy extends SyncStrategy {
         }
 
         // destroy objects
-        for (let objId of Object.keys(world.objects)) {
+        for (let objId in (world.objects)) {
 
             let objEvents = sync.syncObjects[objId];
 

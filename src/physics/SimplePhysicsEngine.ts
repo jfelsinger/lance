@@ -117,7 +117,7 @@ class SimplePhysicsEngine extends PhysicsEngine {
 
         // each object should advance
         let objects = this.gameEngine.world.objects;
-        for (let objId of Object.keys(objects)) {
+        for (let objId in (objects)) {
 
             // shadow objects are not re-enacted
             let ob = objects[objId];

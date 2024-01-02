@@ -81,7 +81,7 @@ export default class PixiRenderer extends Renderer {
 
         if (!this.isReady) return; // assets might not have been loaded yet
 
-        for (let objId of Object.keys(this.sprites)) {
+        for (let objId in (this.sprites)) {
             let objData = this.gameEngine.world.objects[objId];
             let sprite = this.sprites[objId];
 

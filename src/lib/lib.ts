@@ -1,5 +1,1 @@
-import Trace from './Trace';
-
-export default {
-    Trace
-};
+export * from './Trace';

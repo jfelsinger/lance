@@ -33,7 +33,7 @@ class HSHGCollisionDetection {
             return accumulator;
         }, {});
 
-        for (let pairId of Object.keys(this.previousCollisionPairs)) {
+        for (let pairId in (this.previousCollisionPairs)) {
             let pairObj = this.previousCollisionPairs[pairId];
 
             // existed in previous pairs, but not during this step: this pair stopped colliding
@@ -42,7 +42,7 @@ class HSHGCollisionDetection {
             }
         }
 
-        for (let pairId of Object.keys(this.stepCollidingPairs)) {
+        for (let pairId in (this.stepCollidingPairs)) {
             let pairObj = this.stepCollidingPairs[pairId];
 
             // didn't exist in previous pairs, but exists now: this is a new colliding pair

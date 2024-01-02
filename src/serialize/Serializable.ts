@@ -76,7 +76,7 @@ export class Serializable {
         localBufferOffset += Uint8Array.BYTES_PER_ELEMENT;
 
         if (netScheme) {
-            for (let property of Object.keys(netScheme).sort() as (keyof this)[]) {
+            for (let property in (netScheme).sort() as (keyof this)[]) {
                 const propertyValue = (this)[property as keyof this];
 
                 // write the property to buffer
@@ -138,7 +138,7 @@ export class Serializable {
 
         // build a clone with pruned strings
         let prunedCopy = new this.constructor(null, { id: null });
-        for (let p of Object.keys(netScheme))
+        for (let p in (netScheme))
             prunedCopy[p] = changedStrings.indexOf(p) < 0 ? this[p] : null;
 
         return prunedCopy;
@@ -146,7 +146,7 @@ export class Serializable {
 
     syncTo(this: any, other: any) {
         let netScheme = this.constructor.netScheme;
-        for (let p of Object.keys(netScheme)) {
+        for (let p in (netScheme)) {
 
             // ignore classes and lists
             if (netScheme[p].type === BaseTypes.TYPES.LIST || netScheme[p].type === BaseTypes.TYPES.CLASSINSTANCE)

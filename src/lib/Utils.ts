@@ -17,7 +17,7 @@ export default class Utils {
         return hash;
     }
 
-    static arrayBuffersEqual(buf1: Uint8Array, buf2: Uint8Array) {
+    static arrayBuffersEqual<TBufferLike extends Uint8Array | ArrayBufferLike>(buf1: TBufferLike, buf2: TBufferLike) {
         if (buf1.byteLength !== buf2.byteLength) return false;
         let dv1 = new Int8Array(buf1);
         let dv2 = new Int8Array(buf2);

@@ -12,10 +12,11 @@ import { GameComponent } from './GameComponent';
  * or PhysicalObject.
  */
 export class GameObject extends Serializable {
-    id?: number;
+    id!: number;
     playerId: number;
     components: Record<string, GameComponent> = {};
     savedCopy?: this;
+    _roomName?: string;
 
     static get netScheme() {
         return {

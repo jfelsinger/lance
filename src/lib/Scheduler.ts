@@ -7,6 +7,8 @@ const LOOP_SLOW_COUNT = 10;
 type SchedulerOptions = {
     period: number,
     delay: number,
+    stepPeriod: number,
+    tick: () => void,
 };
 
 /**
@@ -46,7 +48,10 @@ export default class Scheduler extends EventEmitter {
             this.callTick();
             this.nextExecTime = currentTime + this.options.stepPeriod;
         }
-        window.requestAnimationFrame(this.nextTickChecker.bind(this));
+
+        if (typeof window !== 'undefined') {
+            window.requestAnimationFrame(this.nextTickChecker.bind(this));
+        }
     }
 
     nextTick() {
@@ -74,7 +79,7 @@ export default class Scheduler extends EventEmitter {
      * start the schedule
      * @return {Scheduler} returns this scheduler instance
      */
-    start() {
+    start(): this {
         setTimeout(this.nextTick.bind(this));
         if (typeof window === 'object' && typeof window.requestAnimationFrame === 'function')
             window.requestAnimationFrame(this.nextTickChecker.bind(this));

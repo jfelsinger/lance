@@ -11,7 +11,8 @@ const defaultOpts: Record<string, any> = { traceLevel: Trace.TRACE_NONE };
 if (!isServerSide) defaultOpts.clientIDSpace = 1000000;
 
 export type EngineOptions = {
-    traceLevel?: TRACE_LEVEL
+    traceLevel?: TRACE_LEVEL;
+    clientIDSpace: number;
 };
 
 export type InputDescriptor = {
@@ -43,6 +44,7 @@ export class GameEngine extends EventEmitter {
     trace: Trace;
     playerId: number;
     world!: GameWorld;
+    highestServerStep: number = 0;
 
     /**
       * Create a game engine instance.  This needs to happen
@@ -72,7 +74,7 @@ export class GameEngine extends EventEmitter {
 
     findLocalShadow(serverObj) {
 
-        for (let localId of Object.keys(this.world.objects)) {
+        for (let localId in (this.world.objects)) {
             if (Number(localId) < this.options.clientIDSpace) continue;
             let localObj = this.world.objects[localId];
             if (localObj.hasOwnProperty('inputId') && localObj.inputId === serverObj.inputId)
@@ -129,7 +131,7 @@ export class GameEngine extends EventEmitter {
       * @param {Number} dt - elapsed time since last step was called.  (optional)
       * @param {Boolean} physicsOnly - do a physics step only, no game logic
       */
-    step(isReenact: boolean, t: number, dt: number, physicsOnly: boolean) {
+    step(isReenact: boolean, t: number, dt?: number, physicsOnly?: boolean) {
         // physics-only step
         if (physicsOnly) {
             if (dt) dt /= 1000; // physics engines work in seconds

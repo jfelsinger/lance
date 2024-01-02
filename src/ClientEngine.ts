@@ -1,10 +1,12 @@
-import io from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 import Utils from './lib/Utils';
 import Scheduler from './lib/Scheduler';
 import Synchronizer from './Synchronizer';
 import Serializer from './serialize/Serializer';
 import NetworkMonitor from './network/NetworkMonitor';
 import NetworkTransmitter from './network/NetworkTransmitter';
+import { GameEngine } from './GameEngine';
+import Renderer from './render/Renderer';
 
 // TODO: the GAME_UPS below should be common to the value implemented in the server engine,
 // or better yet, it should be configurable in the GameEngine instead of ServerEngine+ClientEngine
@@ -21,7 +23,29 @@ const STEP_HURRY_MSEC = 8; // if backward drift detected, hurry next execution b
  * override the constructor {@link ClientEngine#constructor} and the methods
  * {@link ClientEngine#start} and {@link ClientEngine#connect}
  */
-class ClientEngine {
+export class ClientEngine {
+    options: any;
+    serializer: Serializer;
+    gameEngine: GameEngine;
+    networkTransmitter: NetworkTransmitter;
+    networkMonitor: NetworkMonitor;
+    renderer: Renderer;
+    synchronizer?: Synchronizer;
+    socket?: Socket;
+    messageIndex: number = 0;
+
+    inboundMessages: any[] = [];
+    outboundMessages: any[] = [];
+    delayedInputs?: (any[])[];
+
+    scheduler?: Scheduler;
+    lastStepTime: number = 0;
+    correction: number = 0;
+
+    stopped?: boolean;
+    resolved?: boolean;
+    lastTimestamp: number = 0;
+    resolveGame?: any;
 
     /**
       * Create a client engine instance.
@@ -42,7 +66,7 @@ class ClientEngine {
       * @param {String} inputOptions.serverURL - Socket server url
       * @param {Renderer} Renderer - the Renderer class constructor
       */
-    constructor(gameEngine, inputOptions, Renderer) {
+    constructor(gameEngine: GameEngine, inputOptions: any, Renderer: any) {
 
         this.options = Object.assign({
             autoConnect: true,
@@ -75,7 +99,6 @@ class ClientEngine {
         this.renderer = this.gameEngine.renderer = new Renderer(gameEngine, this);
 
         // step scheduler
-        this.scheduler = null;
         this.lastStepTime = 0;
         this.correction = 0;
 
@@ -117,7 +140,7 @@ class ClientEngine {
      */
     connect(options = {}) {
 
-        let connectSocket = matchMakerAnswer => {
+        let connectSocket = (matchMakerAnswer) => {
             return new Promise((resolve, reject) => {
 
                 if (matchMakerAnswer.status !== 'ok')
@@ -167,13 +190,13 @@ class ClientEngine {
      * @return {Promise} Resolves once the Renderer has been initialized, and the game is
      * ready to connect
      */
-    start() {
+    async start() {
         this.stopped = false;
         this.resolved = false;
         // initialize the renderer
         // the render loop waits for next animation frame
         if (!this.renderer) alert('ERROR: game has not defined a renderer');
-        let renderLoop = (timestamp) => {
+        let renderLoop = (timestamp: number) => {
             if (this.stopped) {
                 this.renderer.stop();
                 return;
@@ -184,42 +207,41 @@ class ClientEngine {
             window.requestAnimationFrame(renderLoop);
         };
 
-        return this.renderer.init().then(() => {
-            this.gameEngine.start();
+        await this.renderer.init();
+        this.gameEngine.start();
 
-            if (this.options.scheduler === 'fixed') {
-                // schedule and start the game loop
-                this.scheduler = new Scheduler({
-                    period: this.options.stepPeriod,
-                    tick: this.step.bind(this),
-                    delay: STEP_DELAY_MSEC
-                });
-                this.scheduler.start();
-            }
-
-            if (typeof window !== 'undefined')
-                window.requestAnimationFrame(renderLoop);
-            if (this.options.autoConnect && this.options.standaloneMode !== true) {
-                return this.connect()
-                    .catch((error) => {
-                        this.stopped = true;
-                        throw error;
-                    });
-            }
-        }).then(() => {
-            return new Promise((resolve, reject) => {
-                this.resolveGame = resolve;
-                if (this.socket) {
-                    this.socket.on('disconnect', () => {
-                        if (!this.resolved && !this.stopped) {
-                            if (this.options.verbose)
-                                console.log('disconnected by server...');
-                            this.stopped = true;
-                            reject();
-                        }
-                    });
-                }
+        if (this.options.scheduler === 'fixed') {
+            // schedule and start the game loop
+            this.scheduler = new Scheduler({
+                period: this.options.stepPeriod,
+                tick: this.step.bind(this),
+                delay: STEP_DELAY_MSEC
             });
+            this.scheduler.start();
+        }
+
+        if (typeof window !== 'undefined')
+            window.requestAnimationFrame(renderLoop);
+        if (this.options.autoConnect && this.options.standaloneMode !== true) {
+            await this.connect()
+                .catch((error) => {
+                    this.stopped = true;
+                    throw error;
+                });
+        }
+
+        return new Promise((resolve, reject) => {
+            this.resolveGame = resolve;
+            if (this.socket) {
+                this.socket.on('disconnect', () => {
+                    if (!this.resolved && !this.stopped) {
+                        if (this.options.verbose)
+                            console.log('disconnected by server...');
+                        this.stopped = true;
+                        reject();
+                    }
+                });
+            }
         });
     }
 
@@ -228,14 +250,14 @@ class ClientEngine {
      */
     disconnect() {
         if (!this.stopped) {
-            this.socket.disconnect();
+            this.socket?.disconnect();
             this.stopped = true;
         }
     }
 
     // check if client step is too far ahead (leading) or too far
     // behing (lagging) the server step
-    checkDrift(checkType) {
+    checkDrift(checkType: string) {
 
         if (!this.gameEngine.highestServerStep)
             return;
@@ -406,7 +428,7 @@ class ClientEngine {
     // emit an input to the authoritative server
     handleOutboundInput() {
         for (var x = 0; x < this.outboundMessages.length; x++) {
-            this.socket.emit(this.outboundMessages[x].command, this.outboundMessages[x].data);
+            this.socket?.emit(this.outboundMessages[x].command, this.outboundMessages[x].data);
         }
         this.outboundMessages = [];
     }

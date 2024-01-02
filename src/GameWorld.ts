@@ -1,10 +1,14 @@
-export type ObjectQuery = {
+import { GameObject } from './serialize/GameObject';
+export type BaseObjectQuery = {
     id?: string | number;
     playerId?: string | number;
     instanceType?: string;
     components?: string[];
-    returnSingle?: boolean;
 }
+
+export type SingleObjectQuery = BaseObjectQuery & { returnSingle: true };
+export type MultipleObjectQuery = BaseObjectQuery & { returnSingle?: false };
+export type ObjectQuery = SingleObjectQuery | MultipleObjectQuery;
 
 /**
  * This class implements a singleton game world instance, created by Lance.
@@ -15,7 +19,7 @@ export class GameWorld {
     stepCount: number = 0;
     playerCount: number = 0;
     idCount: number = 0;
-    objects: Record<string, any> = {};
+    objects: Record<number, GameObject> = {};
 
 
     /**
@@ -51,7 +55,9 @@ export class GameWorld {
      * @param {Boolean} [query.returnSingle] Return the first object matched
      * @return {Array | Object} All game objects which match all the query parameters, or the first match if returnSingle was specified
      */
-    queryObjects(query: ObjectQuery) {
+    queryObjects(query: SingleObjectQuery): GameObject | undefined;
+    queryObjects(query: MultipleObjectQuery): GameObject[];
+    queryObjects(query: ObjectQuery): (GameObject[]) | GameObject | undefined {
         let queriedObjects: any[] = [];
 
         // todo this is currently a somewhat inefficient implementation for API testing purposes.
@@ -70,7 +76,7 @@ export class GameWorld {
 
             // components conditions
             if ('components' in query) {
-                query.components.forEach(componentClass => {
+                query.components?.forEach(componentClass => {
                     conditions.push(object.hasComponent(componentClass));
                 });
             }
@@ -96,10 +102,10 @@ export class GameWorld {
      * @param {Object} query See queryObjects
      * @return {Object} The game object, if found
      */
-    queryObject(query: ObjectQuery) {
+    queryObject(query: ObjectQuery): GameObject | undefined {
         return this.queryObjects(Object.assign(query, {
             returnSingle: true
-        }));
+        }) as SingleObjectQuery);
     }
 
     /**
@@ -107,7 +113,7 @@ export class GameWorld {
      * @private
      * @param {Object} object object to add
      */
-    addObject(object) {
+    addObject(object: GameObject) {
         this.objects[object.id] = object;
     }
 
@@ -116,7 +122,7 @@ export class GameWorld {
      * @private
      * @param {number} id id of the object to remove
      */
-    removeObject(id) {
+    removeObject(id: number) {
         delete this.objects[id];
     }
 
@@ -126,9 +132,9 @@ export class GameWorld {
      *
      * @param {function} callback function receives id and object. If callback returns false, the iteration will cease
      */
-    forEachObject(callback) {
-        for (let id of Object.keys(this.objects)) {
-            let returnValue = callback(id, this.objects[id]);  // TODO: the key should be Number(id)
+    forEachObject(callback: (id: number, obj: GameObject) => boolean | void) {
+        for (let id in this.objects) {
+            let returnValue = callback(+id, this.objects[id]);  // TODO: the key should be Number(id)
             if (returnValue === false) break;
         }
     }

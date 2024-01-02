@@ -6,8 +6,11 @@ import http from 'http';
  * Represents both the client and server portions of NetworkMonitor
  */
 export default class NetworkMonitor extends EventEmitter {
+    server?: any;
+    gameName?: string;
 
-    constructor(server) {
+    constructor(server?: any) {
+        super();
 
         // server-side keep game name
         if (server) {

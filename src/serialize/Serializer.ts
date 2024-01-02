@@ -76,7 +76,7 @@ export class Serializer {
 
         // create de-referenced instance of the class. gameEngine and id will be 'tacked on' later at the sync strategies
         let obj = new objectClass(null, { id: null });
-        for (let property of Object.keys(objectClass.netScheme).sort()) {
+        for (let property in (objectClass.netScheme).sort()) {
             let read = this.readDataView(dataView, byteOffset + localByteOffset, objectClass.netScheme[property]);
             obj[property] = read.data;
             localByteOffset += read.bufferSize;

@@ -41,7 +41,7 @@ export default class InterpolateStrategy extends SyncStrategy {
         //
         this.needFirstSync = false;
         let world = this.gameEngine.world;
-        for (let ids of Object.keys(sync.syncObjects)) {
+        for (let ids in (sync.syncObjects)) {
 
             // TODO: we are currently taking only the first event out of
             // the events that may have arrived for this object
@@ -66,7 +66,7 @@ export default class InterpolateStrategy extends SyncStrategy {
         //
         // bend back to original state
         //
-        for (let objId of Object.keys(world.objects)) {
+        for (let objId in (world.objects)) {
 
             let obj = world.objects[objId];
             let isLocal = (obj.playerId == this.gameEngine.playerId); // eslint-disable-line eqeqeq
@@ -80,7 +80,7 @@ export default class InterpolateStrategy extends SyncStrategy {
         // destroy objects
         // TODO: use world.forEachObject((id, ob) => {});
         // TODO: identical code is in InterpolateStrategy
-        for (let objId of Object.keys(world.objects)) {
+        for (let objId in (world.objects)) {
 
             let objEvents = sync.syncObjects[objId];
 

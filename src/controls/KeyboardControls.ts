@@ -194,7 +194,7 @@ class KeyboardControls {
         this.boundKeys = {};
 
         this.gameEngine.on('client__preStep', () => {
-            for (let keyName of Object.keys(this.boundKeys)) {
+            for (let keyName in (this.boundKeys)) {
                 if (this.keyState[keyName] && this.keyState[keyName].isDown) {
 
                     // handle repeat press

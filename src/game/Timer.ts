@@ -1,16 +1,17 @@
+type TimerEventType = 'repeat' | 'single';
+
 // TODO: needs documentation
 // I think the API could be simpler
 //   - Timer.run(waitSteps, cb)
 //   - Timer.repeat(waitSteps, count, cb) // count=null=>forever
 //   - Timer.cancel(cb)
 export default class Timer {
+    currentTime: number = 0;
+    isActive: boolean = false;
+    idCounter: number = 0;
+    events: Record<number, TimerEvent> = {};
 
     constructor() {
-        this.currentTime = 0;
-        this.isActive = false;
-        this.idCounter = 0;
-
-        this.events = {};
     }
 
     play() {
@@ -46,11 +47,11 @@ export default class Timer {
         }
     }
 
-    destroyEvent(eventId) {
+    destroyEvent(eventId: number) {
         delete this.events[eventId];
     }
 
-    loop(time, callback) {
+    loop(time: number, callback: any) {
         let timerEvent = new TimerEvent(this,
             TimerEvent.TYPES.repeat,
             time,
@@ -62,7 +63,7 @@ export default class Timer {
         return timerEvent;
     }
 
-    add(time, callback, thisContext, args) {
+    add(time: number, callback: any, thisContext: any, args: any) {
         let timerEvent = new TimerEvent(this,
             TimerEvent.TYPES.single,
             time,
@@ -77,14 +78,23 @@ export default class Timer {
 
     // todo implement timer delete all events
 
-    destroy(id) {
+    destroy(id: number) {
         delete this.events[id];
     }
 }
 
 // timer event
 class TimerEvent {
-    constructor(timer, type, time, callback, thisContext, args) {
+    id: number;
+    timer: Timer;
+    type: string;
+    time: number;
+    callback: any;
+    startOffset: number;
+    thisContext: any;
+    args: any;
+
+    constructor(timer: Timer, type: TimerEventType, time: number, callback: any, thisContext?: any, args?: any) {
         this.id = ++timer.idCounter;
         this.timer = timer;
         this.type = type;
@@ -93,14 +103,15 @@ class TimerEvent {
         this.startOffset = timer.currentTime;
         this.thisContext = thisContext;
         this.args = args;
-
-        this.destroy = function() {
-            this.timer.destroy(this.id);
-        };
     }
+
+    destroy() {
+        this.timer.destroy(this.id);
+    };
+
+    static TYPES: { [key in TimerEventType]: key } = {
+        repeat: 'repeat',
+        single: 'single'
+    };
 }
 
-TimerEvent.TYPES = {
-    repeat: 'repeat',
-    single: 'single'
-};

@@ -1,6 +1,24 @@
-export default class SyncStrategy {
+import { ClientEngine } from '../ClientEngine';
+import { GameEngine } from '../GameEngine';
 
-    constructor(clientEngine, inputOptions) {
+export type SYNC_APPLIED = 'SYNC_APPLIED';
+
+export default abstract class SyncStrategy {
+    clientEngine: ClientEngine;
+    gameEngine: GameEngine;
+    needFirstSync: boolean = true;
+    options: any;
+
+    requiredSyncs: any[] = [];
+    lastSync?: any;
+    readonly SYNC_APPLIED: SYNC_APPLIED = 'SYNC_APPLIED';
+    readonly STEP_DRIFT_THRESHOLDS = {
+        onServerSync: { MAX_LEAD: 1, MAX_LAG: 3 }, // max step lead/lag allowed after every server sync
+        onEveryStep: { MAX_LEAD: 7, MAX_LAG: 8 }, // max step lead/lag allowed at every step
+        clientReset: 20 // if we are behind this many steps, just reset the step counter
+    };
+
+    constructor(clientEngine: ClientEngine, inputOptions: any) {
         this.clientEngine = clientEngine;
         this.gameEngine = clientEngine.gameEngine;
         this.needFirstSync = true;
@@ -8,13 +26,9 @@ export default class SyncStrategy {
         this.gameEngine.on('client__postStep', this.syncStep.bind(this));
         this.gameEngine.on('client__syncReceived', this.collectSync.bind(this));
         this.requiredSyncs = [];
-        this.SYNC_APPLIED = 'SYNC_APPLIED';
-        this.STEP_DRIFT_THRESHOLDS = {
-            onServerSync: { MAX_LEAD: 1, MAX_LAG: 3 }, // max step lead/lag allowed after every server sync
-            onEveryStep: { MAX_LEAD: 7, MAX_LAG: 8 }, // max step lead/lag allowed at every step
-            clientReset: 20 // if we are behind this many steps, just reset the step counter
-        };
     }
+
+    abstract applySync(sync: any, uh: boolean): SYNC_APPLIED;
 
     // collect a sync and its events
     // maintain a "lastSync" member which describes the last sync we received from
@@ -24,7 +38,7 @@ export default class SyncStrategy {
     //  - objCount
     //  - eventCount
     //  - stepCount
-    collectSync(e) {
+    collectSync(e: any) {
 
         // on first connect we need to wait for a full world update
         if (this.needFirstSync) {
@@ -48,14 +62,14 @@ export default class SyncStrategy {
         }
 
         // build new sync object
-        let lastSync = this.lastSync = {
+        let lastSync: any = this.lastSync = {
             stepCount: e.stepCount,
             fullUpdate: e.fullUpdate,
             syncObjects: {},
             syncSteps: {}
         };
 
-        e.syncEvents.forEach(sEvent => {
+        e.syncEvents.forEach((sEvent: any) => {
 
             // keep a reference of events by object id
             if (sEvent.objectInstance) {
@@ -82,7 +96,7 @@ export default class SyncStrategy {
     }
 
     // add an object to our world
-    addNewObject(objId, newObj, options) {
+    addNewObject(objId: number, newObj: any, options?: any) {
 
         let curObj = new newObj.constructor(this.gameEngine, {
             id: objId
@@ -102,10 +116,10 @@ export default class SyncStrategy {
     }
 
     // sync to step, by applying bending, and applying the latest sync
-    syncStep(stepDesc) {
+    syncStep(stepDesc: any) {
 
         // apply incremental bending
-        this.gameEngine.world.forEachObject((id, o) => {
+        this.gameEngine.world.forEachObject((id, o: any) => {
             if (typeof o.applyIncrementalBending === 'function') {
                 o.applyIncrementalBending(stepDesc);
                 o.refreshToPhysics();
@@ -132,4 +146,5 @@ export default class SyncStrategy {
                 this.lastSync = null;
         }
     }
+
 }
