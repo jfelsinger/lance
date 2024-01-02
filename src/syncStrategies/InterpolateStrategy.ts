@@ -1,4 +1,6 @@
 import SyncStrategy from './SyncStrategy';
+import { ClientEngine } from '../ClientEngine';
+import { GameEngine } from '../GameEngine';
 
 const defaults = {
     clientStepHold: 6,
@@ -8,9 +10,9 @@ const defaults = {
     reflect: false
 };
 
-export default class InterpolateStrategy extends SyncStrategy {
+export class InterpolateStrategy extends SyncStrategy {
 
-    constructor(clientEngine, inputOptions) {
+    constructor(clientEngine: ClientEngine, inputOptions: any) {
 
         const options = Object.assign({}, defaults, inputOptions);
         super(clientEngine, options);
@@ -103,3 +105,5 @@ export default class InterpolateStrategy extends SyncStrategy {
         return this.SYNC_APPLIED;
     }
 }
+
+export default InterpolateStrategy;

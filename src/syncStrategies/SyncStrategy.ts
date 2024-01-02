@@ -3,7 +3,7 @@ import { GameEngine } from '../GameEngine';
 
 export type SYNC_APPLIED = 'SYNC_APPLIED';
 
-export default abstract class SyncStrategy {
+export default class SyncStrategy {
     clientEngine: ClientEngine;
     gameEngine: GameEngine;
     needFirstSync: boolean = true;
@@ -28,7 +28,9 @@ export default abstract class SyncStrategy {
         this.requiredSyncs = [];
     }
 
-    abstract applySync(sync: any, uh: boolean): SYNC_APPLIED;
+    applySync(_sync: any, _uh: boolean): SYNC_APPLIED | undefined {
+        return;
+    }
 
     // collect a sync and its events
     // maintain a "lastSync" member which describes the last sync we received from

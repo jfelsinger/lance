@@ -17,6 +17,7 @@ export class GameObject extends Serializable {
     components: Record<string, GameComponent> = {};
     savedCopy?: this;
     _roomName?: string;
+    inputId: number = 0;
 
     static get netScheme() {
         return {

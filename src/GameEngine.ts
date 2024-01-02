@@ -2,6 +2,8 @@ import GameWorld from './GameWorld';
 import EventEmitter from 'eventemitter3';
 import Timer from './game/Timer';
 import { Trace, TRACE_LEVEL } from './lib/Trace';
+import GameObject from './serialize/GameObject';
+import Serializer from './serialize/Serializer';
 
 // place the game engine in the LANCE globals
 const isServerSide = (typeof window === 'undefined');
@@ -11,7 +13,7 @@ const defaultOpts: Record<string, any> = { traceLevel: Trace.TRACE_NONE };
 if (!isServerSide) defaultOpts.clientIDSpace = 1000000;
 
 export type EngineOptions = {
-    traceLevel?: TRACE_LEVEL;
+    traceLevel: TRACE_LEVEL;
     clientIDSpace: number;
 };
 
@@ -41,10 +43,15 @@ export type InputDescriptor = {
  * with client-side predictions.
  */
 export class GameEngine extends EventEmitter {
+    timer?: Timer;
     trace: Trace;
     playerId: number;
     world!: GameWorld;
     highestServerStep: number = 0;
+    worldSettings: any = {};
+    options: EngineOptions;
+    physicsEngine?: any;
+    ignorePhysics?: boolean;
 
     /**
       * Create a game engine instance.  This needs to happen
@@ -53,13 +60,13 @@ export class GameEngine extends EventEmitter {
       * @param {Object} options - options object
       * @param {Number} options.traceLevel - the trace level.
       */
-    constructor(public options: EngineOptions = {}) {
+    constructor(options: Partial<EngineOptions> = {}) {
         super();
 
         glob.LANCE = { gameEngine: this };
 
         // set options
-        this.options = Object.assign(defaultOpts, options);
+        this.options = Object.assign(defaultOpts, options) as EngineOptions;
 
         /**
          * client's player ID, as a string. If running on the client, this is set at runtime by the clientEngine
@@ -72,7 +79,7 @@ export class GameEngine extends EventEmitter {
         this.trace = new Trace({ traceLevel: this.options.traceLevel });
     }
 
-    findLocalShadow(serverObj) {
+    findLocalShadow(serverObj: GameObject) {
 
         for (let localId in (this.world.objects)) {
             if (Number(localId) < this.options.clientIDSpace) continue;
@@ -84,7 +91,7 @@ export class GameEngine extends EventEmitter {
         return null;
     }
 
-    initWorld(worldSettings) {
+    initWorld(worldSettings?: any) {
 
         this.world = new GameWorld();
 
@@ -117,7 +124,7 @@ export class GameEngine extends EventEmitter {
         this.timer = new Timer();
         this.timer.play();
         this.on('postStep', (step, isReenact) => {
-            if (!isReenact) this.timer.tick();
+            if (!isReenact) this.timer?.tick();
         });
 
         this.emit('start', { timestamp: (new Date()).getTime() });
@@ -135,7 +142,7 @@ export class GameEngine extends EventEmitter {
         // physics-only step
         if (physicsOnly) {
             if (dt) dt /= 1000; // physics engines work in seconds
-            this.physicsEngine.step(dt, objectFilter);
+            this.physicsEngine?.step(dt, objectFilter);
             return;
         }
 
@@ -181,7 +188,7 @@ export class GameEngine extends EventEmitter {
      * @param {Object} object - the object.
      * @return {Object} the final object.
      */
-    addObjectToWorld(object) {
+    addObjectToWorld(object: GameObject): GameObject | undefined {
 
         // if we are asked to create a local shadow object
         // the server copy may already have arrived.
@@ -195,7 +202,7 @@ export class GameEngine extends EventEmitter {
             });
             if (serverCopyArrived) {
                 this.trace.info(() => `========== shadow object NOT added ${object.toString()} ==========`);
-                return null;
+                return;
             }
         }
 
@@ -265,7 +272,7 @@ export class GameEngine extends EventEmitter {
      * @param {Object} object the game object to check
      * @return {Boolean} true if the game object is owned by the player on this client
      */
-    isOwnedByPlayer(object) {
+    isOwnedByPlayer(object: GameObject): boolean {
         return (object.playerId == this.playerId);
     }
 
@@ -280,7 +287,7 @@ export class GameEngine extends EventEmitter {
      *
      * @param {Serializer} serializer - the serializer
      */
-    registerClasses(serializer) {
+    registerClasses(serializer: Serializer) {
     }
 
     /**
@@ -288,7 +295,7 @@ export class GameEngine extends EventEmitter {
      *
      * @return {Object} truthful if the game is over for the player and the object is returned as GameOver data
      */
-    getPlayerGameOverResult() {
+    getPlayerGameOverResult(): any {
         return null;
     }
 }

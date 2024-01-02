@@ -1,14 +1,15 @@
 import SyncStrategy from './SyncStrategy'
+import { ClientEngine } from '../ClientEngine';
+import { GameEngine } from '../GameEngine';
 
 const defaults = {
     worldBufferLength: 60,
     clientStepLag: 0
 };
 
-export default class FrameSyncStrategy extends SyncStrategy {
+export class FrameSyncStrategy extends SyncStrategy {
 
-    constructor(clientEngine, inputOptions) {
-
+    constructor(clientEngine: ClientEngine, inputOptions: any) {
         const options = Object.assign({}, defaults, inputOptions);
         super(clientEngine, options);
 
@@ -57,3 +58,5 @@ export default class FrameSyncStrategy extends SyncStrategy {
     }
 
 }
+
+export default FrameSyncStrategy;

@@ -28,6 +28,6 @@ export default class Synchronizer {
             throw new Error(`ERROR: unknown synchronzation strategy ${this.options.sync}`);
         }
 
-        this.syncStrategy = new strategies[this.options.sync](this.clientEngine, this.options);
+        this.syncStrategy = (new strategies[this.options.sync](this.clientEngine, this.options)) as any;
     }
 }

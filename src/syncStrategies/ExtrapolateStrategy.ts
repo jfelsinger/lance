@@ -12,7 +12,7 @@ const defaults = {
     bendingIncrements: 10   // the bending should be applied increments (how many steps for entire bend)
 };
 
-export default class ExtrapolateStrategy extends SyncStrategy {
+export class ExtrapolateStrategy extends SyncStrategy {
     recentInputs: Record<number, any> = {};
     readonly STEP_DRIFT_THRESHOLDS = {
         onServerSync: { MAX_LEAD: 2, MAX_LAG: 3 }, // max step lead/lag allowed after every server sync
@@ -187,3 +187,5 @@ export default class ExtrapolateStrategy extends SyncStrategy {
     }
 
 }
+
+export default ExtrapolateStrategy;

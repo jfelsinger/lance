@@ -335,7 +335,7 @@ class ServerEngine {
 
         console.log('Client Connected', socket.id);
 
-        let playerEvent = { id: socket.id, playerId, joinTime: socket.joinTime, disconnectTime: 0 };
+        let playerEvent = { id: socket.id, playerId, joinTime: socket.data.joinTime, disconnectTime: 0 };
         this.gameEngine.emit('server__playerJoined', playerEvent);
         this.gameEngine.emit('playerJoined', playerEvent);
         socket.emit('playerJoined', playerEvent);
