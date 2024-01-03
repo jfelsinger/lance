@@ -1,6 +1,5 @@
 import GameWorld from './GameWorld';
 import EventEmitter from 'eventemitter3';
-import Timer from './game/Timer';
 import { Trace, TRACE_LEVEL } from './lib/Trace';
 import GameObject from './serialize/GameObject';
 import Serializer from './serialize/Serializer';
@@ -38,7 +37,6 @@ export type EngineOptions = {
  * with client-side predictions.
  */
 export class GameEngine extends EventEmitter {
-    timer?: Timer;
     trace: Trace;
     playerId: number;
     world!: GameWorld;
@@ -116,14 +114,6 @@ export class GameEngine extends EventEmitter {
     start() {
         this.trace.info(() => '========== game engine started ==========');
         this.initWorld();
-
-        // create the default timer
-        this.timer = new Timer();
-        this.timer.play();
-        this.on('postStep', (step, isReenact) => {
-            if (!isReenact) this.timer?.tick();
-        });
-
         this.emit('start', { timestamp: (new Date()).getTime() });
     }
 

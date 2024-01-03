@@ -92,9 +92,6 @@ export class ClientEngine {
         this.networkTransmitter = new NetworkTransmitter(this.serializer);
         this.networkMonitor = new NetworkMonitor();
 
-        this.inboundMessages = [];
-        this.outboundMessages = [];
-
         // create the renderer
         this.renderer = this.gameEngine.renderer = new Renderer(gameEngine, this);
 
@@ -334,7 +331,7 @@ export class ClientEngine {
     }
 
     // apply a user input on the client side
-    doInputLocal(message) {
+    doInputLocal(message: { data: any }) {
 
         // some synchronization strategies (interpolate) ignore inputs on client side
         if (this.gameEngine.ignoreInputs) {
