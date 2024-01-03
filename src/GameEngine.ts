@@ -153,15 +153,6 @@ export class GameEngine extends EventEmitter {
             this.physicsEngine.step(dt, objectFilter);
         }
 
-        // for each object
-        // - apply incremental bending
-        // - refresh object positions after physics
-        this.world.forEachObject((id, o) => {
-            if (typeof o.refreshFromPhysics === 'function')
-                o.refreshFromPhysics();
-            this.trace.trace(() => `object[${id}] after ${isReenact ? 'reenact' : 'step'} : ${o.toString()}`);
-        });
-
         // emit postStep event
         this.emit('postStep', { step, isReenact });
     }

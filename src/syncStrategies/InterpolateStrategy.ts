@@ -71,7 +71,7 @@ export class InterpolateStrategy extends SyncStrategy {
             let obj = world.objects[objId];
             let isLocal = (obj.playerId == this.gameEngine.playerId); // eslint-disable-line eqeqeq
             let bending = isLocal ? this.options.localObjBending : this.options.remoteObjBending;
-            obj.bendToCurrentState(bending, this.gameEngine.worldSettings, isLocal, this.options.bendingIncrements);
+            obj.bendFromSavedToCurrentState(bending, this.gameEngine.worldSettings, isLocal, this.options.bendingIncrements);
             if (typeof (obj as any).refreshRenderObject === 'function')
                 (obj as any).refreshRenderObject();
             this.gameEngine.trace.trace(() => `object[${objId}] ${obj.bendingToString()}`);

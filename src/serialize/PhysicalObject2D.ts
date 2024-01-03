@@ -3,7 +3,7 @@ import BaseTypes from './BaseTypes';
 import TwoVector from './TwoVector';
 import MathUtils from '../lib/MathUtils';
 import { GameEngine } from '../GameEngine';
-import type { Bending, IncrementalBend } from '../types/Bend';
+import type { BendingOptions, IncrementalBendOption } from '../types/Bend';
 
 /**
  * The PhysicalObject2D is the base class for physical game objects in 2D Physics
@@ -17,14 +17,12 @@ class PhysicalObject2D extends GameObject {
     mass: number = 0;
 
     bendingTarget?: this;
-    incrementScale: number = 1;
-    bendingIncrements: number = 0;
+    bendingIncrements?: number = 0;
     bendingPositionDelta?: TwoVector;
     bendingVelocityDelta?: TwoVector;
     bendingAVDelta: number = 0;
     bendingAngleDelta: number = 0;
-    bendingOptions?: IncrementalBend;
-    physicsObj!: this;
+    bendingOptions?: IncrementalBendOption;
 
     /**
     * The netScheme is a dictionary of attributes in this game
@@ -120,7 +118,7 @@ class PhysicalObject2D extends GameObject {
      *
      * @return {Object} bending - an object with bending paramters
      */
-    get bending(): Bending {
+    get bending(): BendingOptions {
         return {
             // example:
             // position: { percent: 0.8, min: 0.0, max: 4.0 },
@@ -144,8 +142,8 @@ class PhysicalObject2D extends GameObject {
     // - bendingAVDelta
     // - bendingAngleDelta
     // these can later be used to "bend" incrementally from the state described
-    // by "original" to the state described by "self"
-    bendToCurrent<TThis extends this>(original: TThis, percent: number, worldSettings: any, isLocal: boolean, increments: number) {
+    // by "bendFrom" to the state described by "self"
+    bendToCurrent<TThis extends this>(fromSource: TThis, percent: number, worldSettings: any, isLocal: boolean, increments: number) {
 
         let bending = { increments, percent };
         // if the object has defined a bending multiples for this object, use them
@@ -163,29 +161,27 @@ class PhysicalObject2D extends GameObject {
         }
 
         // get the incremental delta position & velocity
-        this.incrementScale = percent / increments;
-        this.bendingPositionDelta = original.position.getBendingDelta(this.position, positionBending);
-        this.bendingVelocityDelta = original.velocity.getBendingDelta(this.velocity, velocityBending);
+        const incrementScale = percent / increments;
+        this.bendingPositionDelta = fromSource.position.getBendingDelta(this.position, positionBending);
+        this.bendingVelocityDelta = fromSource.velocity.getBendingDelta(this.velocity, velocityBending);
 
         // get the incremental angular-velocity
-        this.bendingAVDelta = (this.angularVelocity - original.angularVelocity) * this.incrementScale * avBending.percent;
+        this.bendingAVDelta = (this.angularVelocity - fromSource.angularVelocity) * incrementScale * avBending.percent;
 
         // get the incremental angle correction
-        this.bendingAngleDelta = MathUtils.interpolateDeltaWithWrapping(original.angle, this.angle, angleBending.percent, 0, 2 * Math.PI) / increments;
+        this.bendingAngleDelta = MathUtils.interpolateDeltaWithWrapping(fromSource.angle, this.angle, angleBending.percent, 0, 2 * Math.PI) / increments;
 
         this.bendingTarget = (new (this as any).constructor());
         this.bendingTarget?.syncTo(this);
 
-        // revert to original
-        this.position.copy(original.position);
-        this.angle = original.angle;
-        this.angularVelocity = original.angularVelocity;
-        this.velocity.copy(original.velocity);
+        // revert to fromSource
+        this.position.copy(fromSource.position);
+        this.angle = fromSource.angle;
+        this.angularVelocity = fromSource.angularVelocity;
+        this.velocity.copy(fromSource.velocity);
 
         this.bendingIncrements = increments;
         this.bendingOptions = bending;
-
-        this.refreshToPhysics();
     }
 
     syncTo<TThis extends this>(other: TThis, options?: any) {
@@ -199,17 +195,8 @@ class PhysicalObject2D extends GameObject {
         if (!options || !options.keepVelocity) {
             this.velocity.copy(other.velocity);
         }
-
-        if (this.physicsObj) this.refreshToPhysics();
     }
 
-    // update position, angle, angular velocity, and velocity from new physical state.
-    refreshFromPhysics() {
-        this.copyVector(this.physicsObj.position, this.position);
-        this.copyVector(this.physicsObj.velocity, this.velocity);
-        this.angle = this.physicsObj.angle;
-        this.angularVelocity = this.physicsObj.angularVelocity;
-    }
 
     // generic vector copy.  We need this because different
     // physics engines have different implementations.
@@ -231,25 +218,17 @@ class PhysicalObject2D extends GameObject {
         }
     }
 
-    // update position, angle, angular velocity, and velocity from new game state.
-    refreshToPhysics() {
-        this.copyVector(this.position, this.physicsObj.position);
-        this.copyVector(this.velocity, this.physicsObj.velocity);
-        this.physicsObj.angle = this.angle;
-        this.physicsObj.angularVelocity = this.angularVelocity;
-    }
-
     // apply one increment of bending
     applyIncrementalBending(stepDesc: any) {
-        if (this.bendingIncrements === 0)
+        if (!this.bendingIncrements || this.bendingIncrements <= 0)
             return;
 
         let timeFactor = 1;
         if (stepDesc && stepDesc.dt)
             timeFactor = stepDesc.dt / (1000 / 60);
 
-        const posDelta = this.bendingPositionDelta?.clone().multiplyScalar(timeFactor);
-        const velDelta = this.bendingVelocityDelta?.clone().multiplyScalar(timeFactor);
+        const posDelta = this.bendingPositionDelta!.clone().multiplyScalar(timeFactor);
+        const velDelta = this.bendingVelocityDelta!.clone().multiplyScalar(timeFactor);
         this.position.add(posDelta);
         this.velocity.add(velDelta);
         this.angularVelocity += (this.bendingAVDelta * timeFactor);
@@ -259,7 +238,7 @@ class PhysicalObject2D extends GameObject {
     }
 
     // interpolate implementation
-    interpolate(nextObj, percent) {
+    interpolate(nextObj: this, percent: number) {
 
         // slerp to target position
         this.position.lerp(nextObj.position, percent);

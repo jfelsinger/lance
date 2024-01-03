@@ -1,5 +1,6 @@
 import { ClientEngine } from '../ClientEngine';
 import { GameEngine } from '../GameEngine';
+import { Step } from '../types';
 
 export type SYNC_APPLIED = 'SYNC_APPLIED';
 
@@ -118,13 +119,12 @@ export class SyncStrategy {
     }
 
     // sync to step, by applying bending, and applying the latest sync
-    syncStep(stepDesc: any) {
+    syncStep(stepDesc: Step) {
 
         // apply incremental bending
         this.gameEngine.world.forEachObject((id, o: any) => {
             if (typeof o.applyIncrementalBending === 'function') {
                 o.applyIncrementalBending(stepDesc);
-                o.refreshToPhysics();
             }
         });
 

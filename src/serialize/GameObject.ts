@@ -1,7 +1,7 @@
 import Serializable from './Serializable';
 import BaseTypes from './BaseTypes';
 import { GameEngine } from '../GameEngine';
-import type { Bending } from '../types/Bend';
+import type { BendingOptions } from '../types/Bend';
 import { GameComponent } from './GameComponent';
 
 /**
@@ -129,7 +129,7 @@ export class GameObject extends Serializable {
      * @memberof GameObject
      * @member {Object} bending
      */
-    get bending(): Bending {
+    get bending(): BendingOptions {
         return {
             position: { percent: 1.0, min: 0.0 },
             velocity: { percent: 0.0, min: 0.0 },
@@ -141,14 +141,14 @@ export class GameObject extends Serializable {
     // TODO:
     // rather than pass worldSettings on each bend, they could
     // be passed in on the constructor just once.
-    bendToCurrentState(bending: any, worldSettings: any, isLocal: boolean, bendingIncrements: number) {
+    bendFromSavedToCurrentState(percent: number, worldSettings: any, isLocal: boolean, increments: number) {
         if (this.savedCopy) {
-            this.bendToCurrent(this.savedCopy, bending, worldSettings, isLocal, bendingIncrements);
+            this.bendToCurrent(this.savedCopy, percent, worldSettings, isLocal, increments);
         }
         this.savedCopy = undefined;
     }
 
-    bendToCurrent<TThis extends this>(original: TThis, bending: any, worldSettings: any, isLocal: boolean, bendingIncrements: number) {
+    bendToCurrent<TThis extends this>(fromSource: TThis, percent: number, worldSettings: any, isLocal: boolean, increments: number) {
     }
 
     /**
@@ -160,12 +160,6 @@ export class GameObject extends Serializable {
         super.syncTo(other);
         this.playerId = other.playerId;
     }
-
-    // copy physical attributes to physics sub-object
-    refreshToPhysics() { }
-
-    // copy physical attributes from physics sub-object
-    refreshFromPhysics() { }
 
     // apply a single bending increment
     applyIncrementalBending(stepsDesc: any) { }
